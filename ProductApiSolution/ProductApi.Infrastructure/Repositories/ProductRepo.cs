@@ -1,4 +1,5 @@
-﻿using eCommerceLibrary.Logs;
+﻿using eCommerceLibrary.Generic;
+using eCommerceLibrary.Logs;
 using eCommerceLibrary.Response;
 using Microsoft.EntityFrameworkCore;
 using ProductApi.Application.Interfaces;
@@ -13,71 +14,42 @@ using System.Threading.Tasks;
 
 namespace ProductApi.Infrastructure.Repositories
 {
-    public class ProductRepo(ProductContext context) : IProduct
+    public class ProductRepo : BaseRepository<Product>, IProductRepo
     {
-        public async Task<Responses> CreateAsync(Product entity)
+        private readonly ProductContext _context;
+
+        public ProductRepo(ProductContext context) : base(context)
         {
-            try
-            {
-                var getProduct = await GetByAsync(_ => _.NameProduct.Equals(entity.NameProduct));
-                if (getProduct != null || !string.IsNullOrEmpty(getProduct.NameProduct)) 
-                {
-                    return new Responses(false, $"{getProduct.NameProduct} already exist");
-                }
-                var nowEntity = context.Products.Add(entity).Entity;
-                await context.SaveChangesAsync();
-                if (nowEntity != null || nowEntity.Id > 0) 
-                {
-                    return new Responses(true, $"{entity.NameProduct} added successfully");
-                }
-                else
-                {
-                    return new Responses(false, $"Error save changes {entity.NameProduct}");
-                }
-            }catch (Exception ex)
-            {
-                //log exception
-                LogExceptions.LogException(ex);
-                //display scary-free message to the client
-                return new Responses(false, "Error occured while adding");
-            }
+            _context = context;
         }
 
-        public async Task<Responses> DeleteAsync(Product entity)
+        public async Task<Product> CreateAsync(Product entity)
         {
             try
             {
-               var product = await FindByIdAsync(entity.Id);
-                if(product is null)
-                     return new Responses(false, "Not found");   
-                
-                context.Products.Remove(product);
-                await context.SaveChangesAsync();
-                return new Responses(true, "Deleted successfully");
-                
+                var added = _context.Products.Add(entity).Entity;
+                await _context.SaveChangesAsync();
+                return added;
             }
             catch (Exception ex)
             {
-                //log exception
                 LogExceptions.LogException(ex);
-                //display scary-free message to the client
-                return new Responses(false, "Error occured while deleted");
+                throw;
             }
         }
 
-        public async Task<Product> FindByIdAsync(int id)
+        public async Task<bool> DeleteAsync(Product entity)
         {
             try
             {
-                var product = await context.Products.FindAsync(id);
-                return product is not null ? product : null!;
+                _context.Products.Remove(entity);
+                var rows = await _context.SaveChangesAsync();
+                return rows > 0;
             }
             catch (Exception ex)
             {
-                //log exception
                 LogExceptions.LogException(ex);
-                //display scary-free message to the client
-                throw new Exception("Error occurred retrieve product");
+                throw;
             }
         }
 
@@ -85,54 +57,53 @@ namespace ProductApi.Infrastructure.Repositories
         {
             try
             {
-                var products = await context.Products.AsNoTracking().ToListAsync();
-                return products is not null ? products : null!;
+                return await _context.Products.AsNoTracking().ToListAsync();
             }
             catch (Exception ex)
             {
-                //log exception
                 LogExceptions.LogException(ex);
-                //display scary-free message to the client
-                throw new Exception("Error occurred retrieve list product");
+                throw;
             }
         }
 
-        public async Task<Product> GetByAsync(Expression<Func<Product, bool>> predicate)
+        public async Task<Product?> FindByIdAsync(int id)
         {
             try
             {
-                var product = await context.Products.Where(predicate).FirstOrDefaultAsync()!;
-                return product is not null ? product : null!;
+                return await _context.Products.FindAsync(id);
             }
             catch (Exception ex)
             {
-                //log exception
                 LogExceptions.LogException(ex);
-                //display scary-free message to the client
-                throw new Exception("Error occurred retrieve list product");
+                throw;
             }
         }
 
-        public async Task<Responses> UpdateAsync(Product entity)
+        public async Task<Product?> GetByAsync(Expression<Func<Product, bool>> predicate)
         {
             try
             {
-                var product = await FindByIdAsync(entity.Id);
-                if (product is null)
-                {
-                    return new Responses(false, $"{product.NameProduct} not found");
-                }
-                context.Entry(product).State = EntityState.Detached;
-                context.Products.Update(entity);
-                await context.SaveChangesAsync();
-                return new Responses(true, $"{entity.NameProduct} is updated successfully");
+                return await _context.Products.FirstOrDefaultAsync(predicate);
             }
             catch (Exception ex)
             {
-                //log exception
                 LogExceptions.LogException(ex);
-                //display scary-free message to the client
-                return new Responses(false, "Error occurred while update product");
+                throw;
+            }
+        }
+
+        public async Task<Product> UpdateAsync(Product entity)
+        {
+            try
+            {
+                _context.Products.Update(entity);
+                await _context.SaveChangesAsync();
+                return entity;
+            }
+            catch (Exception ex)
+            {
+                LogExceptions.LogException(ex);
+                throw;
             }
         }
     }

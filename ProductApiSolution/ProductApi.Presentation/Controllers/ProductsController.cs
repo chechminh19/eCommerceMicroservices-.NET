@@ -8,57 +8,60 @@ namespace ProductApi.Presentation.Controllers
 {
     [Route("api")]
     [ApiController]
-    public class ProductsController(IProduct Iproduct) : ControllerBase
+    public class ProductsController : ControllerBase
     {
+        private readonly IProductService _service;
+
+        public ProductsController(IProductService service)
+        {
+            _service = service;
+        }
+
         [HttpGet("products")]
-        public async Task<ActionResult<IEnumerable<ProductDTO>>> GetProducts()
+        public async Task<IActionResult> GetAll()
         {
-            var products = await Iproduct.GetAllAsync();
-            if(products == null) {
-                return NotFound("No Found");
-            }
-            var list = ProductConversion.FromEntities(products);
-            return Ok(list);
-        }
-        [HttpGet("product/{id:int}")]
-        public async Task<ActionResult<ProductDTO>> GetProduct(int id)
-        {
-            var product = await Iproduct.FindByIdAsync(id);
-            if(product == null)
+            var list = await _service.GetAllAsync();
+            if (!list.Any())
             {
-                return NotFound($"Product {product.Id} requested not found");
+                return NotFound(new ApiResponse<IEnumerable<ProductDTO>>(404, "No products found", null));
             }
-            var _product = ProductConversion.FromEntityNew(product);
-            return Ok(_product);
+            return Ok(new ApiResponse<IEnumerable<ProductDTO>>(200, "Success", list));
+
         }
+
+        [HttpGet("product/{id}")]
+        public async Task<IActionResult> GetById(int id)
+        {
+            var product = await _service.GetByIdAsync(id);
+            if (product == null)
+            {
+                return NotFound(new ApiResponse<ProductDTO>(404, $"Product with ID {id} not found", null));
+            }
+            return Ok(new ApiResponse<ProductDTO>(200, "Product found", product));
+        }
+
         [HttpPost("product")]
-        public async Task<ActionResult<eCommerceLibrary.Response.Responses>> CreateProduct(ProductDTO product)
+        public async Task<IActionResult> Create([FromBody]ProductDTO dto)
         {
-            if(!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-            var getEntity = ProductConversion.ToEntity(product);
-            var response = await Iproduct.CreateAsync(getEntity);
-            return response.Flag is true ? Ok(response) : BadRequest(response);
+            var res = await _service.CreateAsync(dto);
+            return res.Flag ? Ok(new ApiResponse<object>(200, res.Message, null))
+                               : BadRequest(new ApiResponse<object>(400, res.Message, null));
         }
+
         [HttpPut("product")]
-        public async Task<ActionResult<eCommerceLibrary.Response.Responses>> UpdateProduct(ProductDTO product)
+        public async Task<IActionResult> Update(ProductDTO dto)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-            var getEntity = ProductConversion.ToEntity(product);
-            var response = await Iproduct.UpdateAsync(getEntity);
-            return response.Flag is true ? Ok(response) : BadRequest(response);
+            var res = await _service.UpdateAsync(dto);
+            return res.Flag ? Ok(new ApiResponse<object>(200, res.Message, null))
+                              : BadRequest(new ApiResponse<object>(400, res.Message, null));
         }
-        [HttpDelete("product")]
-        public async Task<ActionResult<eCommerceLibrary.Response.Responses>> DeleteProduct(ProductDTO product)
-        {          
-            var getEntity = ProductConversion.ToEntity(product);
-            var response = await Iproduct.DeleteAsync(getEntity);
-            return response.Flag is true ? Ok(response) : BadRequest(response);
+
+        [HttpDelete("product/{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var res = await _service.DeleteAsync(id);
+            return res.Flag ? Ok(new ApiResponse<object>(200, res.Message, null))
+                              : BadRequest(new ApiResponse<object>(400, res.Message, null));
         }
     }
 }

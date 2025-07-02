@@ -24,6 +24,6 @@ namespace eCommerceLibrary.Middleware
             {
                 await next(context);
             }
-        }
+        } 
     }
 }
