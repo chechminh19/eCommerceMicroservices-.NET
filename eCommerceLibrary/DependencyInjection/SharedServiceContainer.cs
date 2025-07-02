@@ -19,7 +19,7 @@ namespace eCommerceLibrary.DependencyInjection
         {
             // add generic database context
             services.AddDbContext<TContext>(option => option.UseSqlServer(
-                configuration.GetConnectionString(""), sqlOption => sqlOption.EnableRetryOnFailure()));
+                configuration.GetConnectionString("DatabaseConnection"), sqlOption => sqlOption.EnableRetryOnFailure()));
                 
             // config serilog logging'
             Log.Logger = new LoggerConfiguration()
@@ -39,7 +39,7 @@ namespace eCommerceLibrary.DependencyInjection
             //Use global exception
             app.UseMiddleware<GlobalException>();
             //Register middleware to block all outside calls
-            app.UseMiddleware<ListenToOnlyApiGateway>();
+            //app.UseMiddleware<ListenToOnlyApiGateway>();
             return app;
         } 
     }

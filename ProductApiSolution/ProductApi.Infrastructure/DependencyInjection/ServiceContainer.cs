@@ -19,7 +19,7 @@ namespace ProductApi.Infrastructure.DependencyInjection
         {
             //Add database connect
             //Add authen scheme
-            SharedServiceContainer.AddSharedServices<ProductContext>(services, configuration, configuration["MySerilog:FineName"]!);
+            SharedServiceContainer.AddSharedServices<ProductContext>(services, configuration, configuration["MySerilog:FileName"]!);
             //Create DI
             services.AddScoped<IProduct, ProductRepo>();
 
