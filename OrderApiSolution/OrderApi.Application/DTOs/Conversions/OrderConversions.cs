@@ -1,0 +1,40 @@
+﻿using OrderApi.Application.Enums;
+using OrderApi.Domain.Entities;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace OrderApi.Application.DTOs.Conversions
+{
+    public static class OrderConversions
+    {
+        public static Order ToEntity(OrderCreateDTO dto) => new()
+        {
+            UserId = dto.UserId,
+            Status = dto.Status,
+            CodePay = dto.CodePay,
+            PaymentDate = dto.Status == (byte)OrderEnums.Completed ? DateTime.UtcNow : null
+        };
+
+        public static Order ToEntity(OrderUpdateDTO dto) => new()
+        {
+            Id = dto.Id,
+            UserId = dto.UserId,
+            Status = dto.Status,
+            CodePay = dto.CodePay           
+        };
+
+        public static OrderDTO ToDTO(Order entity) => new(
+            entity.Id,
+            entity.UserId,
+            entity.Status,
+            entity.CodePay,
+            entity.PaymentDate
+        );
+
+        public static IEnumerable<OrderDTO> ToDTOs(IEnumerable<Order> orders)
+            => orders.Select(o => ToDTO(o));
+    }
+}
