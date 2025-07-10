@@ -6,7 +6,7 @@ using ProductApi.Application.Interfaces;
 using eCommerceLibrary.Response;
 namespace ProductApi.Presentation.Controllers
 {
-    [Route("api")]
+    [Route("api/products")]
     [ApiController]
     public class ProductsController : ControllerBase
     {
@@ -17,7 +17,7 @@ namespace ProductApi.Presentation.Controllers
             _service = service;
         }
 
-        [HttpGet("products")]
+        [HttpGet]
         public async Task<IActionResult> GetAll()
         {
             var list = await _service.GetAllAsync();
@@ -29,7 +29,7 @@ namespace ProductApi.Presentation.Controllers
 
         }
 
-        [HttpGet("product/{id}")]
+        [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
             var product = await _service.GetByIdAsync(id);
@@ -40,7 +40,7 @@ namespace ProductApi.Presentation.Controllers
             return Ok(new ApiResponse<ProductDTO>(200, "Product found", product));
         }
 
-        [HttpPost("product")]
+        [HttpPost]
         public async Task<IActionResult> Create([FromBody]ProductDTO dto)
         {
             var res = await _service.CreateAsync(dto);
@@ -48,7 +48,7 @@ namespace ProductApi.Presentation.Controllers
                                : BadRequest(new ApiResponse<object>(400, res.Message, null));
         }
 
-        [HttpPut("product")]
+        [HttpPut]
         public async Task<IActionResult> Update(ProductDTO dto)
         {
             var res = await _service.UpdateAsync(dto);
@@ -56,7 +56,7 @@ namespace ProductApi.Presentation.Controllers
                               : BadRequest(new ApiResponse<object>(400, res.Message, null));
         }
 
-        [HttpDelete("product/{id}")]
+        [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
             var res = await _service.DeleteAsync(id);
