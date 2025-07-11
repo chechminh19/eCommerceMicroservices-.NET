@@ -15,7 +15,7 @@ namespace ProductApi.Application.DependencyInject
         public static IServiceCollection AddApplicationService(this IServiceCollection services)
         {
             // Register Service
-            //services.AddScoped<IOrderService, OrderService>();
+            services.AddScoped<IOrderService, OrderService>();
 
             return services;
         }

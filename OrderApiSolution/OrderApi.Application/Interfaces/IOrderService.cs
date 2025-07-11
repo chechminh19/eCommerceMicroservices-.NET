@@ -14,7 +14,7 @@ namespace OrderApi.Application.Interfaces
         Task<ResponsesService> CreateAsync(OrderCreateDTO dto);
         Task<ResponsesService> UpdateAsync(OrderUpdateDTO dto);
         Task<ResponsesService> DeleteAsync(int id);
-        Task<OrderDTO?> GetByIdAsync(int id);
-        Task<IEnumerable<OrderDTO>> GetAllAsync();
+        Task<ResponsesServiceDTO<OrderDTO?>> GetByIdAsync(int id);
+        Task<ResponsesServiceDTO<IEnumerable<OrderDTO>>> GetAllAsync();
     }
 }
