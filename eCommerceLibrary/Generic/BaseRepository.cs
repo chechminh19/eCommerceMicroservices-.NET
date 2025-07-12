@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,28 +9,26 @@ using System.Threading.Tasks;
 
 namespace eCommerceLibrary.Generic
 {
-    public class BaseRepository<T> : IGenericRepo<T> where T : class
+    public abstract class BaseRepository<T> : IGenericRepo<T>, IDisposable, ITransactionRepo where T : class
     {
         protected readonly DbContext _context;
-        protected readonly DbSet<T> _dbSet;
-
+        protected readonly DbSet<T> _dbSet; 
+        private IDbContextTransaction _transaction;
         public BaseRepository(DbContext context)
         {
             _context = context;
             _dbSet = _context.Set<T>();
         }
-
+       
         public virtual async Task<T> AddAsync(T entity)
         {
             var added = _dbSet.Add(entity).Entity;
-            await _context.SaveChangesAsync();
             return added;
         }
 
         public virtual async Task<T> UpdateAsync(T entity)
         {
             _dbSet.Update(entity);
-            await _context.SaveChangesAsync();
             return entity;
         }
 
@@ -53,6 +52,39 @@ namespace eCommerceLibrary.Generic
         public virtual async Task<T?> GetByAsync(Expression<Func<T, bool>> predicate)
         {
             return await _dbSet.FirstOrDefaultAsync(predicate);
+        }
+
+        public void Dispose()
+              => _transaction?.Dispose();
+
+        public async Task BeginTransactionAsync()
+                => _transaction = await _context.Database.BeginTransactionAsync();
+        
+
+        public async Task CommitAsync()
+        {
+            if (_transaction != null)
+            {
+                await _transaction.CommitAsync();
+                await DisposeTransactionAsync();
+            }
+        }
+
+        public async Task RollbackAsync()
+        {
+            if (_transaction != null)
+            {
+                await _transaction.RollbackAsync();
+                await DisposeTransactionAsync();
+            }
+        }
+        private async Task DisposeTransactionAsync()
+        {
+            if (_transaction != null)
+            {
+                await _transaction.DisposeAsync();
+                _transaction = null;
+            }
         }
     }
 }

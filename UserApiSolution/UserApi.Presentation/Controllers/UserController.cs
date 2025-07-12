@@ -38,14 +38,14 @@ namespace UserApi.Presentation.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateUser([FromBody] UserCreateDTO dto)
+        public async Task<IActionResult> CreateUser([FromBody] UserRegisterDTO dto)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(new ApiResponse<object>(400, "Invalid data", ModelState));
             }
 
-            var response = await _userService.CreateAsync(dto);
+            var response = await _userService.RegisterWithoutGoogle(dto);
             return response.Flag
                 ? Ok(new ApiResponse<object>(201, response.Message, null))
                 : BadRequest(new ApiResponse<object>(400, response.Message, null));

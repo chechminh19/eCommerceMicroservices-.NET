@@ -1,4 +1,6 @@
-﻿using eCommerceLibrary.Response;
+﻿using eCommerceLibrary.Generic;
+using eCommerceLibrary.Response;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,9 +16,13 @@ namespace UserApi.Application
     public class UserService : IUserService
     {
         private readonly IUserRepo _userRepo;
-        public UserService(IUserRepo userRepo)
+        private readonly IConfiguration _config;
+        private readonly ITransactionRepo _transactionRepo;
+        public UserService(IUserRepo userRepo, IConfiguration configuration, ITransactionRepo repo)
         {
             _userRepo = userRepo;
+            _config = configuration;
+            _transactionRepo = repo;
         }
 
         public async Task<ResponsesServiceDTO<UserCreateDTO>> CreateAsync(UserCreateDTO dto)
@@ -151,6 +157,27 @@ namespace UserApi.Application
                     "Failed to authenticate with Google",
                     null
                 );
+            }
+        }
+
+        public async Task<ResponsesService> RegisterWithoutGoogle(UserRegisterDTO dto)
+        {   
+            try
+            {         
+                if (await _userRepo.GetByAsync(u => u.Email == dto.Email) != null)
+                    return new ResponsesService(false, "Email already exists");
+
+                var user = UserConversions.ToEntityRegister(dto);
+                
+                if (!await Utils.EmailUtils.SendConfirmationEmail(user.Email, user.EmailConfirmationToken, _config))
+                    return new ResponsesService(false, "Failed to send confirmation email");
+                await _userRepo.CreateAsync(user);
+                
+                return new ResponsesService(true, "User created successfully");
+            }
+            catch (Exception)
+            {                
+                return new ResponsesService(false, "Failed to create user");
             }
         }
     }

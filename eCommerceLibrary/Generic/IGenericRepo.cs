@@ -12,4 +12,5 @@ namespace eCommerceLibrary.Generic
         Task<T?> FindByIdAsync(int id);
         Task<T?> GetByAsync(Expression<Func<T, bool>> predicate);
     }
+    
 }

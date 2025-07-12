@@ -7,6 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+    <PackageReference Include="MailKit" Version="4.13.0" />
+    <PackageReference Include="MimeKit" Version="4.13.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\eCommerceLibrary\eCommerceLibrary.csproj" />
     <ProjectReference Include="..\UserApi.Domain\UserApi.Domain.csproj" />
   </ItemGroup>

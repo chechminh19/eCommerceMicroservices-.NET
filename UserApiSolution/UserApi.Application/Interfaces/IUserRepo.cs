@@ -17,5 +17,6 @@ namespace UserApi.Application.Interfaces
         public Task<User?> FindByIdAsync(int id);
         public Task<User?> GetByAsync(Expression<Func<User, bool>> predicate);
         public Task<User> UpdateAsync(User entity);
+        Task<User> GetUserByConfirmationToken(string sToken);
     }
 }

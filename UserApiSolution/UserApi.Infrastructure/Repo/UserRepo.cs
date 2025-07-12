@@ -102,5 +102,12 @@ namespace UserApi.Infrastructure.Repo
                 throw;
             }
         }
+
+        public async Task<User> GetUserByConfirmationToken(string sToken)
+        {
+            return await _userContext.Users.SingleOrDefaultAsync(
+              u => u.EmailConfirmationToken == sToken
+          );
+        }
     }
 }

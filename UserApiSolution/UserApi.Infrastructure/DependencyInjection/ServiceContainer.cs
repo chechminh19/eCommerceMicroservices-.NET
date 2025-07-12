@@ -1,4 +1,5 @@
 ﻿using eCommerceLibrary.DependencyInjection;
+using eCommerceLibrary.Generic;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,6 +19,7 @@ namespace UserApi.Infrastructure.DependencyInjection
             SharedServiceContainer.AddSharedServices<UserContext>(services, configuration, configuration["MySerilog:UserService"]!);
             //Create DI
             services.AddScoped<IUserRepo, UserRepo>();
+            services.AddScoped<ITransactionRepo, UserRepo>();
 
             return services;
         }

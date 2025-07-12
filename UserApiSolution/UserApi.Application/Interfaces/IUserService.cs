@@ -12,6 +12,7 @@ namespace UserApi.Application.Interfaces
     public interface IUserService
     {
         Task<ResponsesServiceDTO<UserCreateDTO>> CreateAsync(UserCreateDTO dto);
+        Task<ResponsesService> RegisterWithoutGoogle(UserRegisterDTO dto);
         Task<ResponsesServiceDTO<UserUpdateDTO>> UpdateAsync(UserUpdateDTO dto);
         Task<ResponsesService> DeleteAsync(int id);
         Task<ResponsesServiceDTO<UserDTO?>> GetByIdAsync(int id);
