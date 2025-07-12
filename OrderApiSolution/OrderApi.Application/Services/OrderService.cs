@@ -32,7 +32,7 @@ namespace OrderApi.Application.Services
                 }
 
                 var entity = OrderConversions.ToEntity(dto);
-                var createdOrder = await _orderRepo.AddAsync(entity);
+                var createdOrder = await _orderRepo.CreateAsync(entity);
 
                 return new ResponsesService(true, $"Order {createdOrder.Id} created successfully");
             }

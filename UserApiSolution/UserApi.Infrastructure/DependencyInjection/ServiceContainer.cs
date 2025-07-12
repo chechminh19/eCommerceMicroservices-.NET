@@ -2,12 +2,12 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using OrderApi.Application.Interfaces;
-using OrderApi.Infrastructure;
-using OrderApi.Infrastructure.Repositories;
+using UserApi.Application.Interfaces;
+using UserApi.Infrastructure;
+using UserApi.Infrastructure.Repo;
 
 
-namespace ProductApi.Infrastructure.DependencyInjection
+namespace UserApi.Infrastructure.DependencyInjection
 {
     public static class ServiceContainer
     {
@@ -15,9 +15,9 @@ namespace ProductApi.Infrastructure.DependencyInjection
         {
             //Add database connect
             //Add authen scheme
-            SharedServiceContainer.AddSharedServices<OrderContext>(services, configuration, configuration["MySerilog:OrderService"]!);
+            SharedServiceContainer.AddSharedServices<UserContext>(services, configuration, configuration["MySerilog:UserService"]!);
             //Create DI
-            services.AddScoped<IOrderRepo, OrderRepo>();
+            services.AddScoped<IUserRepo, UserRepo>();
 
             return services;
         }

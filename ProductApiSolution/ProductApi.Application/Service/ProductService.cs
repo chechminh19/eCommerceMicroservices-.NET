@@ -25,7 +25,7 @@ namespace ProductApi.Application.Service
                 return new ResponsesService(false, $"{exist.NameProduct} already exists");
 
             var entity = ProductConversion.ToEntity(dto);
-            await _productRepo.AddAsync(entity);
+            await _productRepo.CreateAsync(entity);
 
             return new ResponsesService(true, $"{entity.NameProduct} created successfully");
         }
