@@ -18,23 +18,35 @@ namespace UserApi.Presentation.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAllUsers()
         {
-            var response = await _userService.GetAllAsync();
-            if (!response.Flag || !response.Data.Any())
+            if (!ModelState.IsValid)
             {
-                return NotFound(new ApiResponse<IEnumerable<UserDTO>>(404, "No users found", null));
+                var errors = ModelState
+                        .Where(x => x.Value?.Errors.Count > 0)
+                        .ToDictionary(kvp => kvp.Key,
+                                      kvp => kvp.Value!.Errors.Select(e => e.ErrorMessage).ToArray());
+
+                return BadRequest(new ApiResponse<object>(false, 400, "Invalid data", null, errors));
             }
-            return Ok(new ApiResponse<IEnumerable<UserDTO>>(200, "Success", response.Data));
+
+            var response = await _userService.GetAllAsync();
+            return StatusCode(response.StatusCode, new ApiResponse<object>(response.Flag, response.StatusCode, response.Message, null));
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetUserById(int id)
         {
-            var response = await _userService.GetByIdAsync(id);
-            if (!response.Flag)
+            if (!ModelState.IsValid)
             {
-                return NotFound(new ApiResponse<UserDTO>(404, $"User with ID {id} not found", null));
+                var errors = ModelState
+                        .Where(x => x.Value?.Errors.Count > 0)
+                        .ToDictionary(kvp => kvp.Key,
+                                      kvp => kvp.Value!.Errors.Select(e => e.ErrorMessage).ToArray());
+
+                return BadRequest(new ApiResponse<object>(false, 400, "Invalid data", null, errors));
             }
-            return Ok(new ApiResponse<UserDTO>(200, "User found", response.Data));
+
+            var response = await _userService.GetByIdAsync(id);
+            return StatusCode(response.StatusCode, new ApiResponse<object>(response.Flag, response.StatusCode, response.Message, null));
         }
 
         [HttpPost]
@@ -42,36 +54,50 @@ namespace UserApi.Presentation.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(new ApiResponse<object>(400, "Invalid data", ModelState));
+                var errors = ModelState
+                        .Where(x => x.Value?.Errors.Count > 0)
+                        .ToDictionary(kvp => kvp.Key,
+                                      kvp => kvp.Value!.Errors.Select(e => e.ErrorMessage).ToArray());
+
+                return BadRequest(new ApiResponse<object>(false, 400, "Invalid data", null, errors));
             }
 
             var response = await _userService.RegisterWithoutGoogle(dto);
-            return response.Flag
-                ? Ok(new ApiResponse<object>(201, response.Message, null))
-                : BadRequest(new ApiResponse<object>(400, response.Message, null));
+            return StatusCode(response.StatusCode, new ApiResponse<object>(response.Flag, response.StatusCode, response.Message, null));
         }
 
-        [HttpPut]
-        public async Task<IActionResult> UpdateUser([FromBody] UserUpdateDTO dto)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateUser([FromBody] UserUpdateDTO dto, int id)
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(new ApiResponse<object>(400, "Invalid data", ModelState));
+                var errors = ModelState
+                        .Where(x => x.Value?.Errors.Count > 0)
+                        .ToDictionary(kvp => kvp.Key,
+                                      kvp => kvp.Value!.Errors.Select(e => e.ErrorMessage).ToArray());
+
+                return BadRequest(new ApiResponse<object>(false, 400, "Invalid data", null, errors));
             }
 
-            var response = await _userService.UpdateAsync(dto);
-            return response.Flag
-                ? Ok(new ApiResponse<object>(200, response.Message, null))
-                : BadRequest(new ApiResponse<object>(400, response.Message, null));
+            var response = await _userService.UpdateAsync(dto, id);
+            return StatusCode(response.StatusCode, new ApiResponse<object>(response.Flag, response.StatusCode, response.Message, null));
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(int id)
         {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState
+                        .Where(x => x.Value?.Errors.Count > 0)
+                        .ToDictionary(kvp => kvp.Key,
+                                      kvp => kvp.Value!.Errors.Select(e => e.ErrorMessage).ToArray());
+
+                return BadRequest(new ApiResponse<object>(false, 400, "Invalid data", null, errors));
+            }
+
             var response = await _userService.DeleteAsync(id);
-            return response.Flag
-                ? Ok(new ApiResponse<object>(200, response.Message, null))
-                : BadRequest(new ApiResponse<object>(400, response.Message, null));
+            return StatusCode(response.StatusCode, new ApiResponse<object>(response.Flag, response.StatusCode, response.Message, null));
         }
     }
 }

@@ -10,16 +10,7 @@ using UserApi.Domain.Enums;
 namespace UserApi.Application.DTOs
 {
     public static class UserConversions
-    {
-        public static User ToEntity(UserCreateDTO dto) => new()
-        {
-            Email = dto.Email,
-            FullName = dto.FullName,
-            GoogleId = dto.GoogleId,
-            Role = dto.Role,
-            CreatedAt = DateTime.UtcNow,
-            IsEmailVerified = dto.GoogleId != null
-        };
+    {      
         public static User ToEntityRegister(UserRegisterDTO dto)
         {
             if (dto == null)
@@ -43,11 +34,9 @@ namespace UserApi.Application.DTOs
                 Role = UserRole.User
             };
         }
-        public static User ToEntity(UserUpdateDTO dto, User existingUser)
+        public static User ToEntityUpdate(UserUpdateDTO dto, User existingUser)
         {
             existingUser.FullName = dto.FullName ?? existingUser.FullName;
-            existingUser.IsEmailVerified = dto.IsEmailVerified ?? existingUser.IsEmailVerified;
-            existingUser.LastLogin = dto.LastLogin ?? existingUser.LastLogin;
             return existingUser;
         }
 

@@ -36,17 +36,17 @@ namespace UserApi.Presentation.Middlewares
 
                 if (user.IsEmailVerified)
                 {
-                    // Nếu email đã xác nhận rồi
+                    // if email is verified
                     context.Response.Redirect($"{baseUrl}/already-verified");
                     return;
                 }
 
-                // Xác nhận email
+                // confirm email
                 user.IsEmailVerified = true;
                 user.EmailConfirmationToken = null;
                 await userRepo.UpdateAsync(user);
 
-                // Redirect đến trang thành công
+                // Redirect to success
                 context.Response.Redirect(successUrl);
             }
             catch (Exception)

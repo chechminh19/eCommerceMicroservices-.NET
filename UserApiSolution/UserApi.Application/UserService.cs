@@ -25,159 +25,103 @@ namespace UserApi.Application
             _transactionRepo = repo;
         }
 
-        public async Task<ResponsesServiceDTO<UserCreateDTO>> CreateAsync(UserCreateDTO dto)
+       
+
+        public async Task<ResponsesService<int>> DeleteAsync(int id)
         {
+            var user = await _userRepo.FindByIdAsync(id);
+            if (user == null)
+                return ResponsesService<int>.Fail("User not found", 404, id);
+
+            bool deleteResult;
             try
             {
-                if (string.IsNullOrWhiteSpace(dto.Email))
-                    return new ResponsesServiceDTO<UserCreateDTO>(false, "Email is required", null);
-
-                if (await _userRepo.GetByAsync(u => u.Email == dto.Email) != null)
-                    return new ResponsesServiceDTO<UserCreateDTO>(false, "Email already exists", null);
-
-                var user = UserConversions.ToEntity(dto);
-                await _userRepo.CreateAsync(user);
-
-                return new ResponsesServiceDTO<UserCreateDTO>(true, "User created successfully", dto);
+                deleteResult = await _userRepo.DeleteAsync(user);
             }
             catch (Exception)
             {
-                return new ResponsesServiceDTO<UserCreateDTO>(false, "Failed to create user", null);
+                return ResponsesService<int>.Fail("Internal server error during delete", 500, id);
             }
+
+            if (!deleteResult)
+                return ResponsesService<int>.Fail("Failed to delete user due to conflict or constraints", 409, id);
+
+            return ResponsesService<int>.Success("User deleted successfully", id);
         }
 
-        public async Task<ResponsesService> DeleteAsync(int id)
-        {
-            try
-            {
-                var user = await _userRepo.FindByIdAsync(id);
-                if (user == null)
-                    return new ResponsesService(false, "User not found");
-
-                if (!await _userRepo.DeleteAsync(user))
-                    return new ResponsesService(false, "Failed to delete user");
-
-                return new ResponsesService(true, "User deleted successfully");
-            }
-            catch (Exception)
-            {
-                return new ResponsesService(false, "Failed to delete user");
-            }
-        }
-
-        public async Task<ResponsesServiceDTO<IEnumerable<UserDTO>>> GetAllAsync()
+        public async Task<ResponsesService<IEnumerable<UserDTO>>> GetAllAsync()
         {
             try
             {
                 var users = await _userRepo.GetAllAsync();
-                return new ResponsesServiceDTO<IEnumerable<UserDTO>>(
-                    true,
-                    "Users retrieved successfully",
-                    UserConversions.ToDTOs(users)
-                );
+                var userDtos = UserConversions.ToDTOs(users);
+
+                return ResponsesService<IEnumerable<UserDTO>>.Success("Users retrieved successfully",200,userDtos);
             }
             catch (Exception)
             {
-                return new ResponsesServiceDTO<IEnumerable<UserDTO>>(
-                    false,
-                    "Failed to retrieve users",
-                    Enumerable.Empty<UserDTO>()
+                return ResponsesService<IEnumerable<UserDTO>>.Fail("Failed to retrieve users",500,Enumerable.Empty<UserDTO>()
                 );
             }
         }
 
-        public async Task<ResponsesServiceDTO<UserDTO?>> GetByIdAsync(int id)
+        public async Task<ResponsesService<UserDTO?>> GetByIdAsync(int id)
         {
             try
             {
                 var user = await _userRepo.FindByIdAsync(id);
-                return user == null
-                    ? new ResponsesServiceDTO<UserDTO?>(false, "User not found", null)
-                    : new ResponsesServiceDTO<UserDTO?>(true, "User retrieved successfully", UserConversions.ToDTO(user));
-            }
-            catch (Exception)
-            {
-                return new ResponsesServiceDTO<UserDTO?>(false, "Failed to retrieve user", null);
-            }
-        }
 
-        public async Task<ResponsesServiceDTO<UserUpdateDTO>> UpdateAsync(UserUpdateDTO dto)
-        {
-            try
-            {
-                var user = await _userRepo.FindByIdAsync(dto.Id);
                 if (user == null)
-                    return new ResponsesServiceDTO<UserUpdateDTO>(false, "User not found", null);
+                    return ResponsesService<UserDTO?>.Fail("User not found", 404, null);
 
-                var updatedUser = await _userRepo.UpdateAsync(UserConversions.ToEntity(dto, user));
-                return new ResponsesServiceDTO<UserUpdateDTO>(true, "User updated successfully", dto);
+                var userDto = UserConversions.ToDTO(user);
+                return ResponsesService<UserDTO?>.Success("User retrieved successfully", 200, userDto);
             }
             catch (Exception)
             {
-                return new ResponsesServiceDTO<UserUpdateDTO>(false, "Failed to update user", null);
+                return ResponsesService<UserDTO?>.Fail("Failed to retrieve user", 500, null);
             }
         }
 
-        public async Task<ResponsesServiceDTO<UserDTO>> HandleGoogleUserAsync(string googleId, string email, string name)
+
+        public async Task<ResponsesService<object>> UpdateAsync(UserUpdateDTO dto, int id)
         {
             try
             {
-                var existingUser = await _userRepo.GetByAsync(u => u.GoogleId == googleId || u.Email == email);
+                var user = await _userRepo.FindByIdAsync(id);
+                if (user == null)
+                    return ResponsesService<object>.Fail("User not found", 404);
 
-                if (existingUser == null)
-                {
-                    var newUser = new User
-                    {
-                        Email = email,
-                        GoogleId = googleId,
-                        FullName = name,
-                        IsEmailVerified = true,
-                        CreatedAt = DateTime.UtcNow,
-                        Role = UserRole.User
-                    };
-                    existingUser = await _userRepo.CreateAsync(newUser);
-                }
-                else if (string.IsNullOrEmpty(existingUser.GoogleId))
-                {
-                    existingUser.GoogleId = googleId;
-                    existingUser.IsEmailVerified = true;
-                    existingUser = await _userRepo.UpdateAsync(existingUser);
-                }
-
-                return new ResponsesServiceDTO<UserDTO>(
-                    true,
-                    "Google authentication successful",
-                    UserConversions.ToDTO(existingUser)
-                );
+                await _userRepo.UpdateAsync(UserConversions.ToEntityUpdate(dto, user));
+                return ResponsesService<object>.Success("User updated successfully", 204);
             }
             catch (Exception)
             {
-                return new ResponsesServiceDTO<UserDTO>(
-                    false,
-                    "Failed to authenticate with Google",
-                    null
-                );
+                return ResponsesService<object>.Fail("Failed to update user", 500);
             }
-        }
+        }       
 
-        public async Task<ResponsesService> RegisterWithoutGoogle(UserRegisterDTO dto)
+        public async Task<ResponsesService<object>> RegisterWithoutGoogle(UserRegisterDTO dto)
         {   
+
             try
-            {         
+            {       
                 if (await _userRepo.GetByAsync(u => u.Email == dto.Email) != null)
-                    return new ResponsesService(false, "Email already exists");
+                    return ResponsesService<object>.Fail("Email already exist.", 400);
 
                 var user = UserConversions.ToEntityRegister(dto);
-                
-                if (!await Utils.EmailUtils.SendConfirmationEmail(user.Email, user.EmailConfirmationToken, _config))
-                    return new ResponsesService(false, "Failed to send confirmation email");
                 await _userRepo.CreateAsync(user);
-                
-                return new ResponsesService(true, "User created successfully");
+
+                if (!await Utils.EmailUtils.SendConfirmationEmail(user.Email, user.EmailConfirmationToken, _config))
+                {
+                    return ResponsesService<object>.Fail("Failed to send confirmation email.", 500);
+                }
+                                 
+                return ResponsesService<object>.Success("User created successfully.", 201);
             }
             catch (Exception)
-            {                
-                return new ResponsesService(false, "Failed to create user");
+            {
+                return ResponsesService<object>.Fail("An unexpected error occurred.", 500);
             }
         }
     }

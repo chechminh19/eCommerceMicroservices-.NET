@@ -11,11 +11,10 @@ namespace UserApi.Application.Interfaces
 {
     public interface IUserService
     {
-        Task<ResponsesServiceDTO<UserCreateDTO>> CreateAsync(UserCreateDTO dto);
-        Task<ResponsesService> RegisterWithoutGoogle(UserRegisterDTO dto);
-        Task<ResponsesServiceDTO<UserUpdateDTO>> UpdateAsync(UserUpdateDTO dto);
-        Task<ResponsesService> DeleteAsync(int id);
-        Task<ResponsesServiceDTO<UserDTO?>> GetByIdAsync(int id);
-        Task<ResponsesServiceDTO<IEnumerable<UserDTO>>> GetAllAsync();
+        Task<ResponsesService<object>> RegisterWithoutGoogle(UserRegisterDTO dto);
+        Task<ResponsesService<object>> UpdateAsync(UserUpdateDTO dto, int id);
+        Task<ResponsesService<int>> DeleteAsync(int id);
+        Task<ResponsesService<UserDTO?>> GetByIdAsync(int id);
+        Task<ResponsesService<IEnumerable<UserDTO>>> GetAllAsync();
     }
 }
