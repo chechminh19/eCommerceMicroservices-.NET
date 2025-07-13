@@ -14,17 +14,18 @@ namespace OrderApi.Application.DTOs.Conversions
         {
             UserId = dto.UserId,
             Status = dto.Status,
-            CodePay = dto.CodePay,
             PaymentDate = dto.Status == (byte)OrderEnums.Completed ? DateTime.UtcNow : null
         };
 
-        public static Order ToEntity(OrderUpdateDTO dto) => new()
+        public static Order ToEntityUpdate(OrderUpdateDTO dto, Order exist)
         {
-            Id = dto.Id,
-            UserId = dto.UserId,
-            Status = dto.Status,
-            CodePay = dto.CodePay           
-        };
+
+            exist.UserId = dto.UserId;
+            exist.Status = dto.Status;
+            exist.CodePay = dto.CodePay;
+
+            return exist;
+        }
 
         public static OrderDTO ToDTO(Order entity) => new(
             entity.Id,

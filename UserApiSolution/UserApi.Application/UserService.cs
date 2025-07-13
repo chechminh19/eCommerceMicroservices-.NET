@@ -46,7 +46,7 @@ namespace UserApi.Application
             if (!deleteResult)
                 return ResponsesService<int>.Fail("Failed to delete user due to conflict or constraints", 409, id);
 
-            return ResponsesService<int>.Success("User deleted successfully", id);
+            return ResponsesService<int>.Success("User deleted successfully", 200,id);
         }
 
         public async Task<ResponsesService<IEnumerable<UserDTO>>> GetAllAsync()

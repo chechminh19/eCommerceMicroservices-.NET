@@ -10,13 +10,11 @@ namespace OrderApi.Application.DTOs
     // DTO khi TẠO đơn hàng mới
     public record OrderCreateDTO(
         [Required] int UserId,
-        [Required] byte Status,
-        int? CodePay
+        [Required] byte Status
     );
 
     // DTO khi UPDATE đơn hàng
     public record OrderUpdateDTO(
-        [Required] int Id,
         [Required] int UserId,
         [Required] byte Status,
         int? CodePay

@@ -19,97 +19,89 @@ namespace OrderApi.Application.Services
             _orderRepo = orderRepo;
         }
 
-        public async Task<ResponsesService> CreateAsync(OrderCreateDTO dto)
+        public async Task<ResponsesService<object>> CreateAsync(OrderCreateDTO dto)
         {
             try
-            {
-                // Kiểm tra nếu order đã tồn tại (ví dụ: kiểm tra theo CodePay nếu cần)
-                if (dto.CodePay.HasValue)
-                {
-                    var exist = await _orderRepo.GetByAsync(o => o.CodePay == dto.CodePay);
-                    if (exist != null)
-                        return new ResponsesService(false, $"Order with CodePay {dto.CodePay} already exists");
-                }
-
+            {              
                 var entity = OrderConversions.ToEntity(dto);
                 var createdOrder = await _orderRepo.CreateAsync(entity);
 
-                return new ResponsesService(true, $"Order {createdOrder.Id} created successfully");
+                return  ResponsesService<object>.Success($"Order {createdOrder.Id} created successfully", 201);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return new ResponsesService(false, $"Error creating order: {ex.Message}");
+                return ResponsesService<object>.Fail($"Error creating order", 500);
             }
         }
 
-        public async Task<ResponsesService> DeleteAsync(int id)
+        public async Task<ResponsesService<object>> DeleteAsync(int id)
         {
+            var order = await _orderRepo.FindByIdAsync(id);
+            if (order == null)
+                return ResponsesService<object>.Fail("Order not found", 404, id);
+
+            bool deleteResult;
             try
             {
-                var order = await _orderRepo.FindByIdAsync(id);
-                if (order == null)
-                    return new ResponsesService(false, "Order not found");
-
-                var result = await _orderRepo.DeleteAsync(order);
-                return result
-                    ? new ResponsesService(true, $"Order {id} deleted successfully")
-                    : new ResponsesService(false, $"Failed to delete order {id}");
+                deleteResult = await _orderRepo.DeleteAsync(order);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return new ResponsesService(false, $"Error deleting order: {ex.Message}");
+                return ResponsesService<object>.Fail("Internal server error during delete", 500, id);
             }
+
+            if (!deleteResult)
+                return ResponsesService<object>.Fail("Failed to delete order due to conflict or constraints", 409, id);
+
+            return ResponsesService<object>.Success("Order deleted successfully", id);
         }
 
-        public async Task<ResponsesServiceDTO<IEnumerable<OrderDTO>>> GetAllAsync()
+        public async Task<ResponsesService<IEnumerable<OrderDTO>>> GetAllAsync()
         {
             try
             {
                 var orders = await _orderRepo.GetAllAsync();
-                return new ResponsesServiceDTO<IEnumerable<OrderDTO>>(
-                    true,
-                    "Orders retrieved successfully",
-                    OrderConversions.ToDTOs(orders));
+                var orderDto = OrderConversions.ToDTOs(orders);
+
+                return ResponsesService<IEnumerable<OrderDTO>>.Success("Orders retrieved successfully", 200, orderDto);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return new ResponsesServiceDTO<IEnumerable<OrderDTO>>(
-                    false,
-                    $"Error retrieving orders: {ex.Message}",
-                    null);
+                return ResponsesService<IEnumerable<OrderDTO>>.Fail("Failed to retrieve orders", 500, Enumerable.Empty<OrderDTO>()
+                );
             }
         }
 
-        public async Task<ResponsesServiceDTO<OrderDTO?>> GetByIdAsync(int id)
+        public async Task<ResponsesService<OrderDTO?>> GetByIdAsync(int id)
         {
             try
             {
                 var order = await _orderRepo.FindByIdAsync(id);
-                if (order == null)
-                    return new ResponsesServiceDTO<OrderDTO>(false, "Order not found", null);
 
-                return new ResponsesServiceDTO<OrderDTO>(true, "Order found", OrderConversions.ToDTO(order));
+                if (order == null)
+                    return ResponsesService<OrderDTO?>.Fail("Order not found", 404, null);
+
+                var orderDto = OrderConversions.ToDTO(order);
+                return ResponsesService<OrderDTO?>.Success("Order retrieved successfully", 200, orderDto);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return new ResponsesServiceDTO<OrderDTO>(false, $"Error retrieving order: {ex.Message}", null);
+                return ResponsesService<OrderDTO?>.Fail("Failed to retrieve order", 500, null);
             }
         }
 
-        public async Task<ResponsesService> UpdateAsync(OrderUpdateDTO dto)
+        public async Task<ResponsesService<object>> UpdateAsync(OrderUpdateDTO dto, int id)
         {
             try
             {
-                var existingOrder = await _orderRepo.FindByIdAsync(dto.Id);
+                var existingOrder = await _orderRepo.FindByIdAsync(id);
                 if (existingOrder == null)
-                    return new ResponsesService(false, "Order not found");
+                    return  ResponsesService<object>.Fail("Order not found", 404);
 
-                // Cập nhật thông tin
                 existingOrder.UserId = dto.UserId;
                 existingOrder.Status = dto.Status;
                 existingOrder.CodePay = dto.CodePay;
 
-                // Xử lý PaymentDate tự động
                 if (dto.Status == (byte)OrderEnums.Completed && existingOrder.PaymentDate == null)
                 {
                     existingOrder.PaymentDate = DateTime.UtcNow;
@@ -119,12 +111,12 @@ namespace OrderApi.Application.Services
                     existingOrder.PaymentDate = null;
                 }
 
-                await _orderRepo.UpdateAsync(existingOrder);
-                return new ResponsesService(true, $"Order {dto.Id} updated successfully");
+                await _orderRepo.UpdateAsync(OrderConversions.ToEntityUpdate(dto,existingOrder));
+                return  ResponsesService<object>.Success("Order updated successfully", 200);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return new ResponsesService(false, $"Error updating order: {ex.Message}");
+                return  ResponsesService<object>.Fail("Error updating order", 500);
             }
         }
 
