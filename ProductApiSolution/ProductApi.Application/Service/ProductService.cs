@@ -18,50 +18,83 @@ namespace ProductApi.Application.Service
             _productRepo = productRepo;
         }
 
-        public async Task<ResponsesService> CreateAsync(ProductDTO dto)
+        public async Task<ResponsesService<object>> CreateAsync(ProductDTO dto)
         {
-            var exist = await _productRepo.GetByAsync(p => p.NameProduct == dto.Name);
-            if (exist != null)
-                return new ResponsesService(false, $"{exist.NameProduct} already exists");
+            try
+            {
+                var exist = await _productRepo.GetByAsync(p => p.NameProduct == dto.Name);
+                if (exist != null)
+                    return ResponsesService<object>.Fail($"{exist.NameProduct} already exists", 400);
 
-            var entity = ProductConversion.ToEntity(dto);
-            await _productRepo.CreateAsync(entity);
+                var entity = ProductConversion.ToEntity(dto);
+                await _productRepo.CreateAsync(entity);
 
-            return new ResponsesService(true, $"{entity.NameProduct} created successfully");
+                return ResponsesService<object>.Success($"{entity.NameProduct} created successfully", 201);
+            }catch (Exception)
+            {
+                return ResponsesService<object>.Fail("An unexpected error occurred.", 500);
+            }
         }
 
-        public async Task<ResponsesService> UpdateAsync(ProductDTO dto)
+        public async Task<ResponsesService<object>> UpdateAsync(ProductDTO dto, int id)
         {
-            var existing = await _productRepo.FindByIdAsync(dto.Id);
+            var existing = await _productRepo.FindByIdAsync(id);
             if (existing == null)
-                return new ResponsesService(false, $"Product {dto.Id} not found");
+                return  ResponsesService<object>.Fail($"Product {id} not found", 404);
 
             var entity = ProductConversion.ToEntity(dto);
             await _productRepo.UpdateAsync(entity);
 
-            return new ResponsesService(true, $"{entity.NameProduct} updated");
+            return  ResponsesService<object>.Success($"{entity.NameProduct} updated", 204);
         }
 
-        public async Task<ResponsesService> DeleteAsync(int id)
+        public async Task<ResponsesService<int>> DeleteAsync(int id)
         {
             var product = await _productRepo.FindByIdAsync(id);
             if (product == null)
-                return new ResponsesService(false, $"Product {id} not found");
-
-            await _productRepo.DeleteAsync(product);
-            return new ResponsesService(true, $"Product {id} deleted");
+                return  ResponsesService<int>.Fail($"Product {id} not found",404);
+            bool deleteResult;
+            try
+            {
+                deleteResult = await _productRepo.DeleteAsync(product);
+            } catch (Exception)
+            {
+                return ResponsesService<int>.Fail("Internal server error during delete", 500, id);
+            }
+            return  ResponsesService<int>.Success($"Product {id} deleted", 204);
         }
 
-        public async Task<ProductDTO?> GetByIdAsync(int id)
+        public async Task<ResponsesService<ProductDTO?>> GetByIdAsync(int id)
         {
-            var entity = await _productRepo.FindByIdAsync(id);
-            return entity is null ? null : ProductConversion.FromEntityNew(entity);
+            try
+            {
+                var product = await _productRepo.FindByIdAsync(id);
+
+                if (product == null)
+                    return ResponsesService<ProductDTO?>.Fail("Product not found", 404, null);
+
+                var productDto = ProductConversion.FromEntityNew(product);
+                return ResponsesService<ProductDTO?>.Success("Product not found", 200, productDto);
+            }
+            catch (Exception)
+            {
+                return ResponsesService<ProductDTO?>.Fail("Failed to retrieve product", 500, null);
+            }
         }
 
-        public async Task<IEnumerable<ProductDTO>> GetAllAsync()
+        public async Task<ResponsesService<IEnumerable<ProductDTO>>> GetAllAsync()
         {
-            var list = await _productRepo.GetAllAsync();
-            return ProductConversion.FromEntities(list);
-        }
+            try
+            {
+                var products = await _productRepo.GetAllAsync();
+                var productsDto = ProductConversion.FromEntities(products);
+
+                return ResponsesService<IEnumerable<ProductDTO>>.Success("Products retrieved successfully", 200, productsDto);
+            }
+            catch (Exception)
+            {
+                return ResponsesService<IEnumerable<ProductDTO>>.Fail("Failed to retrieve products", 500, Enumerable.Empty<ProductDTO>());
+            }
+        }       
     }
 }

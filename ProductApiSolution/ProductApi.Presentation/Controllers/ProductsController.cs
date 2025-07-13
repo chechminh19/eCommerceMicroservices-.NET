@@ -20,48 +20,87 @@ namespace ProductApi.Presentation.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            var list = await _service.GetAllAsync();
-            if (!list.Any())
+            if (!ModelState.IsValid)
             {
-                return NotFound(new ApiResponse<IEnumerable<ProductDTO>>(404, "No products found", null));
+                var errors = ModelState
+                        .Where(x => x.Value?.Errors.Count > 0)
+                        .ToDictionary(kvp => kvp.Key,
+                                      kvp => kvp.Value!.Errors.Select(e => e.ErrorMessage).ToArray());
+
+                return BadRequest(new ApiResponse<object>(false, 400, "Invalid data", null, errors));
             }
-            return Ok(new ApiResponse<IEnumerable<ProductDTO>>(200, "Success", list));
+
+            var response = await _service.GetAllAsync();
+            return StatusCode(response.StatusCode, new ApiResponse<object>(response.Flag, response.StatusCode, response.Message, null));
 
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var product = await _service.GetByIdAsync(id);
-            if (product == null)
+            if (!ModelState.IsValid)
             {
-                return NotFound(new ApiResponse<ProductDTO>(404, $"Product with ID {id} not found", null));
+                var errors = ModelState
+                        .Where(x => x.Value?.Errors.Count > 0)
+                        .ToDictionary(kvp => kvp.Key,
+                                      kvp => kvp.Value!.Errors.Select(e => e.ErrorMessage).ToArray());
+
+                return BadRequest(new ApiResponse<object>(false, 400, "Invalid data", null, errors));
             }
-            return Ok(new ApiResponse<ProductDTO>(200, "Product found", product));
+
+            var response = await _service.GetByIdAsync(id);
+            return StatusCode(response.StatusCode, new ApiResponse<object>(response.Flag, response.StatusCode, response.Message, null));
         }
 
         [HttpPost]
         public async Task<IActionResult> Create([FromBody]ProductDTO dto)
         {
-            var res = await _service.CreateAsync(dto);
-            return res.Flag ? Ok(new ApiResponse<object>(200, res.Message, null))
-                               : BadRequest(new ApiResponse<object>(400, res.Message, null));
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState
+                        .Where(x => x.Value?.Errors.Count > 0)
+                        .ToDictionary(kvp => kvp.Key,
+                                      kvp => kvp.Value!.Errors.Select(e => e.ErrorMessage).ToArray());
+
+                return BadRequest(new ApiResponse<object>(false, 400, "Invalid data", null, errors));
+            }
+
+            var response = await _service.CreateAsync(dto);
+            return StatusCode(response.StatusCode, new ApiResponse<object>(response.Flag, response.StatusCode, response.Message, null));
         }
 
-        [HttpPut]
-        public async Task<IActionResult> Update(ProductDTO dto)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update([FromBody ]ProductDTO dto, int id)
         {
-            var res = await _service.UpdateAsync(dto);
-            return res.Flag ? Ok(new ApiResponse<object>(200, res.Message, null))
-                              : BadRequest(new ApiResponse<object>(400, res.Message, null));
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState
+                        .Where(x => x.Value?.Errors.Count > 0)
+                        .ToDictionary(kvp => kvp.Key,
+                                      kvp => kvp.Value!.Errors.Select(e => e.ErrorMessage).ToArray());
+
+                return BadRequest(new ApiResponse<object>(false, 400, "Invalid data", null, errors));
+            }
+
+            var response = await _service.UpdateAsync(dto, id);
+            return StatusCode(response.StatusCode, new ApiResponse<object>(response.Flag, response.StatusCode, response.Message, null));
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var res = await _service.DeleteAsync(id);
-            return res.Flag ? Ok(new ApiResponse<object>(200, res.Message, null))
-                              : BadRequest(new ApiResponse<object>(400, res.Message, null));
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState
+                        .Where(x => x.Value?.Errors.Count > 0)
+                        .ToDictionary(kvp => kvp.Key,
+                                      kvp => kvp.Value!.Errors.Select(e => e.ErrorMessage).ToArray());
+
+                return BadRequest(new ApiResponse<object>(false, 400, "Invalid data", null, errors));
+            }
+
+            var response = await _service.DeleteAsync(id);
+            return StatusCode(response.StatusCode, new ApiResponse<object>(response.Flag, response.StatusCode, response.Message, null));
         }
     }
 }

@@ -9,9 +9,8 @@ namespace ProductApi.Application.DTOs
 {
     public record ProductDTO
     (
-        int Id,
-        [Required] string Name,
-        [Required] string Des,
+        [Required] [MaxLength(20)] string Name,
+        [Required] [MaxLength(20)] string Des,
         [Required, Range(1, int.MaxValue)] int Quantity,
         [Required, DataType(DataType.Currency)] decimal Price
         );
