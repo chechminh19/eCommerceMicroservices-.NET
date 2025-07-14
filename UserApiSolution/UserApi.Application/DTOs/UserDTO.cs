@@ -35,4 +35,10 @@ namespace UserApi.Application.DTOs
         [StringLength(20, MinimumLength = 6, ErrorMessage = "Password must be 6-20 characters")]
         public string Password { get; set; }
     }
+    public record LoginResponseDTO
+    {
+        public int Id { get; init; }
+        public string Email { get; init; } = default!;
+        public string Token { get; init; } = default!;
+    }
 }

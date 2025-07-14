@@ -16,7 +16,7 @@ namespace UserApi.Infrastructure.DependencyInjection
         {
             //Add database connect
             //Add authen scheme
-            SharedServiceContainer.AddSharedServices<UserContext>(services, configuration, configuration["MySerilog:UserService"]!);
+            SharedServiceContainer.AddSharedServices<UserContext>(services, configuration, configuration["MySerilog:UserService"]!);            
             //Create DI
             services.AddScoped<IUserRepo, UserRepo>();
             services.AddScoped<ITransactionRepo, UserRepo>();

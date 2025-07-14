@@ -16,7 +16,7 @@ namespace UserApi.Presentation.Controllers
             _userService = userService;
         }
         [HttpGet]
-        public async Task<IActionResult> GetAllUsers()
+        public async Task<ActionResult<IEnumerable<UserDTO>>> GetAllUsers()
         {
             if (!ModelState.IsValid)
             {
@@ -29,11 +29,11 @@ namespace UserApi.Presentation.Controllers
             }
 
             var response = await _userService.GetAllAsync();
-            return StatusCode(response.StatusCode, new ApiResponse<object>(response.Flag, response.StatusCode, response.Message, null));
+            return StatusCode(response.StatusCode, new ApiResponse<IEnumerable<UserDTO>>(response.Flag, response.StatusCode, response.Message, response.Data));
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetUserById(int id)
+        public async Task<ActionResult<UserDTO>> GetUserById(int id)
         {
             if (!ModelState.IsValid)
             {
@@ -46,7 +46,7 @@ namespace UserApi.Presentation.Controllers
             }
 
             var response = await _userService.GetByIdAsync(id);
-            return StatusCode(response.StatusCode, new ApiResponse<object>(response.Flag, response.StatusCode, response.Message, null));
+            return StatusCode(response.StatusCode, new ApiResponse<UserDTO>(response.Flag, response.StatusCode, response.Message, response.Data));
         }
 
         [HttpPost]
@@ -99,5 +99,22 @@ namespace UserApi.Presentation.Controllers
             var response = await _userService.DeleteAsync(id);
             return StatusCode(response.StatusCode, new ApiResponse<object>(response.Flag, response.StatusCode, response.Message, null));
         }
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] UserRegisterDTO dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState
+                    .Where(x => x.Value?.Errors.Count > 0)
+                    .ToDictionary(kvp => kvp.Key, kvp => kvp.Value!.Errors.Select(e => e.ErrorMessage).ToArray());
+
+                return BadRequest(new ApiResponse<object>(false, 400, "Invalid data", null, errors));
+            }
+
+            var response = await _userService.Login(dto);
+            return StatusCode(response.StatusCode,
+                new ApiResponse<LoginResponseDTO>(response.Flag, response.StatusCode, response.Message, response.Data));
+        }
+
     }
 }

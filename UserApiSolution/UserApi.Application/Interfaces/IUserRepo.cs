@@ -18,5 +18,6 @@ namespace UserApi.Application.Interfaces
         public Task<User?> GetByAsync(Expression<Func<User, bool>> predicate);
         public Task<User> UpdateAsync(User entity);
         Task<User> GetUserByConfirmationToken(string sToken);
+        Task<User> GetUserToLogin(string email);
     }
 }

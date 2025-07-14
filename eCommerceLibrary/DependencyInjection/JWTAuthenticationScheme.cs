@@ -18,7 +18,7 @@ namespace eCommerceLibrary.DependencyInjection
         {
             //add jwt services
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-                .AddJwtBearer("Bearer", options =>
+                .AddJwtBearer(options =>
                 {
                     var key = Encoding.UTF8.GetBytes(configuration.GetSection("Authentication:Key").Value!);
                     string issue = configuration.GetSection("Authentication:Issuer").Value!;

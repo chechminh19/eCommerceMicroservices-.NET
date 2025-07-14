@@ -1,5 +1,6 @@
 ﻿using eCommerceLibrary.Generic;
 using eCommerceLibrary.Logs;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -108,6 +109,13 @@ namespace UserApi.Infrastructure.Repo
             return await _userContext.Users.SingleOrDefaultAsync(
               u => u.EmailConfirmationToken == sToken
           );
+        }
+
+        public async Task<User> GetUserToLogin(string email)
+        {
+           return await _userContext.Users
+                .FirstOrDefaultAsync(record => record.Email == email);
+           
         }
     }
 }

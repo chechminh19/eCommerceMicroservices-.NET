@@ -1,14 +1,19 @@
 ﻿using eCommerceLibrary.Generic;
 using eCommerceLibrary.Response;
 using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
+using Org.BouncyCastle.Asn1.Ocsp;
 using System;
 using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using UserApi.Application.DTOs;
 using UserApi.Application.Enums;
 using UserApi.Application.Interfaces;
+using UserApi.Application.Utils;
 using UserApi.Domain.Entities;
 
 namespace UserApi.Application
@@ -122,6 +127,27 @@ namespace UserApi.Application
             catch (Exception)
             {
                 return ResponsesService<object>.Fail("An unexpected error occurred.", 500);
+            }
+        }
+
+        public async Task<ResponsesService<LoginResponseDTO>> Login(UserRegisterDTO dto)
+        {
+            try
+            {
+                var user = await _userRepo.GetUserToLogin(dto.Email);
+                if(user == null)
+                    return ResponsesService<LoginResponseDTO>.Fail("Email is not correct", 401);
+                if (!BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
+                        return ResponsesService<LoginResponseDTO>.Fail("Password is not correct", 401);
+                if(user.EmailConfirmationToken != null && !user.IsEmailVerified)
+                            return ResponsesService<LoginResponseDTO>.Fail("Please confirm via link in your mail", 401);
+                var jwt = user.GenerateJsonWebToken(_config["Authentication:Issuer"]!,_config["Authentication:Audience"]!,_config["Authentication:Key"]!,DateTime.UtcNow);
+                var response = new LoginResponseDTO { Id = user.Id, Email = user.Email, Token = jwt  };
+                                return ResponsesService<LoginResponseDTO>.Success("Login successfully.", 200, response);
+            }
+            catch (Exception)
+            {
+                return ResponsesService<LoginResponseDTO>.Fail("Login failed.", 500);
             }
         }
     }
