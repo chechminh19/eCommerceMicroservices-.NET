@@ -3,6 +3,7 @@ using eCommerceLibrary.Generic;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using UserApi.Application;
 using UserApi.Application.Interfaces;
 using UserApi.Infrastructure;
 using UserApi.Infrastructure.Repo;
@@ -20,7 +21,9 @@ namespace UserApi.Infrastructure.DependencyInjection
             //Create DI
             services.AddScoped<IUserRepo, UserRepo>();
             services.AddScoped<ITransactionRepo, UserRepo>();
-
+            // External Services
+            services.AddScoped<IGoogleAuthor, GoogleAuthorService>();
+            services.AddScoped<IGoogleAuthHelper, GoogleAuthHelperService>();
             return services;
         }
         public static IApplicationBuilder UseInfrastructurePolicy(this IApplicationBuilder app)

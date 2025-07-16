@@ -1,8 +1,17 @@
 ﻿using eCommerceLibrary.Response;
+using Google.Apis.Auth.OAuth2;
+using Google.Apis.PeopleService.v1.Data;
+using Google.Apis.PeopleService.v1;
+using Google.Apis.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using UserApi.Application.DTOs;
 using UserApi.Application.Interfaces;
+using Google.Apis.Auth;
+using UserApi.Application;
+using Google.Apis.Auth.OAuth2.Responses;
+using Microsoft.EntityFrameworkCore;
+using UserApi.Domain.Entities;
 
 namespace UserApi.Presentation.Controllers
 {
@@ -11,9 +20,11 @@ namespace UserApi.Presentation.Controllers
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
-        public UserController(IUserService userService)
+        private readonly IGoogleAuthor _googleAuthor;
+        public UserController(IUserService userService, IGoogleAuthor googleAuthor)
         {
             _userService = userService;
+            _googleAuthor = googleAuthor;    
         }
         [HttpGet]
         public async Task<ActionResult<IEnumerable<UserDTO>>> GetAllUsers()
@@ -116,5 +127,52 @@ namespace UserApi.Presentation.Controllers
                 new ApiResponse<LoginResponseDTO>(response.Flag, response.StatusCode, response.Message, response.Data));
         }
 
+        [HttpGet("google")]
+        public IActionResult GoogleLogin() => Ok(_googleAuthor.GetAuthorizationUrl());
+
+
+        [HttpGet("authorize/callback")]
+        public async Task<IActionResult> GoogleCallback([FromQuery] string code)
+        {
+            if (string.IsNullOrEmpty(code))
+            {
+                return BadRequest(new ApiResponse<object>(
+                    false, 400, "Missing Google authorization code", null));
+            }
+
+            var result = await _googleAuthor.ExchangeCodeForToken(code);
+
+            return StatusCode(result.StatusCode,
+                new ApiResponse<LoginResponseGoogleDTO>(result.Flag, result.StatusCode, result.Message, result.Data));
+        }
+
+        [HttpPost("google-validate")]
+        public async Task<IActionResult> ValidateGoogleToken([FromBody] TokenRequest request)
+        {
+            if (string.IsNullOrEmpty(request?.Token))
+                return BadRequest("Token is required");
+
+            try
+            {
+                var user = await _googleAuthor.ValidCodeForToken(request.Token);
+
+                return Ok(new
+                {
+                    UserId = user.Id,
+                    user.Email,
+                    user.FullName,
+                    user.GoogleId
+                });
+            }
+            catch (InvalidJwtException ex)
+            {
+                return Unauthorized(new { Error = "Invalid Google token", Details = ex.Message });
+            }
+        }
     }
+    public class TokenRequest
+    {
+        public string Token { get; set; }
+    }
+
 }

@@ -41,4 +41,20 @@ namespace UserApi.Application.DTOs
         public string Email { get; init; } = default!;
         public string Token { get; init; } = default!;
     }
+    public class GoogleUserInfo
+    {
+        public string Id { get; set; }
+        public string Email { get; set; }
+        public string Name { get; set; }
+        public string Picture { get; set; }
+        //public bool VerifiedEmail { get; set; }
+    }
+    public record LoginResponseGoogleDTO
+    {
+        public int Id { get; init; }
+        public string Email { get; init; }
+        //public string GoogleAccessToken { get; init; }
+        //public string GoogleIdToken { get; init; }
+        public string JwtToken { get; init; }   
+    }
 }

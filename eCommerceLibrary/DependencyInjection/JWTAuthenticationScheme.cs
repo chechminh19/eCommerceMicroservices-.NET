@@ -1,6 +1,7 @@
 ﻿using eCommerceLibrary.Middleware;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
@@ -36,9 +37,16 @@ namespace eCommerceLibrary.DependencyInjection
                         ValidAudience = audience,
                         IssuerSigningKey = new SymmetricSecurityKey(key)
                     };
+                })
+                .AddGoogle(options =>
+                {
+                    options.ClientId = configuration["Google:ClientId"]!;
+                    options.ClientSecret = configuration["Google:ClientSecret"]!;
+                    options.CorrelationCookie.SameSite = SameSiteMode.Lax;
+                    options.CorrelationCookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
                 });
             return services;
-        }
+        }     
         public static IApplicationBuilder UseSharedPolicies(this IApplicationBuilder app)
         {
             app.UseMiddleware<GlobalException>();

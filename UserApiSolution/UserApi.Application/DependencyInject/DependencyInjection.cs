@@ -1,5 +1,8 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Google;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Org.BouncyCastle.Tls;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,6 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using UserApi.Application;
 using UserApi.Application.Interfaces;
+using UserApi.Domain.Entities;
 
 namespace UserApi.Application.DependencyInject
 {
@@ -16,7 +20,6 @@ namespace UserApi.Application.DependencyInject
         {
             // Register Service
             services.AddScoped<IUserService, UserService>();
-
             return services;
         }
     }

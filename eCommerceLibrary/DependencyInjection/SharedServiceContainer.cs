@@ -20,7 +20,7 @@ namespace eCommerceLibrary.DependencyInjection
             // add generic database context
             services.AddDbContext<TContext>(option => option.UseSqlServer(
                 configuration.GetConnectionString("DatabaseConnection"), sqlOption => sqlOption.EnableRetryOnFailure()));
-                
+            
             // config serilog logging'
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Information()

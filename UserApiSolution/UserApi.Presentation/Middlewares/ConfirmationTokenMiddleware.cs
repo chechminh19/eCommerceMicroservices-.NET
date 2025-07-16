@@ -13,6 +13,11 @@ namespace UserApi.Presentation.Middlewares
         }
         public async Task InvokeAsync(HttpContext context)
         {
+            if (!context.Request.Path.StartsWithSegments("/confirm-email"))
+            {
+                await _next(context);
+                return;
+            }
             var token = context.Request.Query["token"].FirstOrDefault();
             var baseUrl = _configuration["AppSettings:UrlMidleware"];
             var successUrl = $"{baseUrl}/verify-success";
@@ -24,7 +29,7 @@ namespace UserApi.Presentation.Middlewares
                 return;
             }
             try
-            {
+            {   
                 var userRepo = context.RequestServices.GetRequiredService<IUserRepo>();
                 var user = await userRepo.GetUserByConfirmationToken(token);
 

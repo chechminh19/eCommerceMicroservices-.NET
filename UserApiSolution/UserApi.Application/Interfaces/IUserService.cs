@@ -1,5 +1,6 @@
 ﻿using eCommerceLibrary.Generic;
 using eCommerceLibrary.Response;
+using Google.Apis.Auth.OAuth2;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,5 +18,6 @@ namespace UserApi.Application.Interfaces
         Task<ResponsesService<int>> DeleteAsync(int id);
         Task<ResponsesService<UserDTO?>> GetByIdAsync(int id);
         Task<ResponsesService<IEnumerable<UserDTO>>> GetAllAsync();
+        
     }
 }

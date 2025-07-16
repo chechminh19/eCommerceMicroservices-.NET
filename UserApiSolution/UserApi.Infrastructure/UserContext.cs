@@ -22,7 +22,7 @@ namespace UserApi.Infrastructure
             .HasIndex(u => u.GoogleId)
             .IsUnique()
             .HasFilter("[GoogleId] IS NOT NULL");
-        modelBuilder.Entity<User>()
+        modelBuilder.Entity<User>() 
              .Property(u => u.Role)
              .HasConversion<int>();
         }

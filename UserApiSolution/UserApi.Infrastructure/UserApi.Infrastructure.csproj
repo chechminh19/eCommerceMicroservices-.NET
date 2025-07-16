@@ -17,6 +17,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\eCommerceLibrary\eCommerceLibrary.csproj" />
     <ProjectReference Include="..\UserApi.Application\UserApi.Application.csproj" />
+    <ProjectReference Include="..\UserApi.Domain\UserApi.Domain.csproj" />
   </ItemGroup>
 
 </Project>

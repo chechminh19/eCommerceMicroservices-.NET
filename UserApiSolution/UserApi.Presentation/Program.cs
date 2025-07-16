@@ -3,10 +3,13 @@ using Microsoft.OpenApi.Models;
 using System.Reflection;
 using UserApi.Application.DependencyInject;
 using UserApi.Application.Utils;
+using UserApi.Infrastructure;
 using UserApi.Infrastructure.DependencyInjection;
 using UserApi.Presentation.Middlewares;
 var builder = WebApplication.CreateBuilder(args);
-
+builder.Services.AddCors(opt => {
+    opt.AddPolicy("Open", p => p.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
+});
 // Add services to the container.
 
 builder.Services.AddControllers()
@@ -41,8 +44,17 @@ builder.Services.AddSwaggerGen(c =>
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
     c.IncludeXmlComments(xmlPath);
 });
+
+
+builder.Services.Configure<CookiePolicyOptions>(options =>
+{
+    options.MinimumSameSitePolicy = SameSiteMode.Lax;
+    options.Secure = CookieSecurePolicy.Always;
+});
 builder.Services.AddInfrastructureService(builder.Configuration);
 builder.Services.AddApplicationService();
+// Program.cs
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -53,10 +65,12 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseMiddleware<ConfirmationTokenMiddleware>();
+app.UseRouting();
+app.UseCors("Open");
+app.UseCookiePolicy();
 app.UseAuthentication();
 app.UseAuthorization();
-
+app.UseMiddleware<ConfirmationTokenMiddleware>();
 app.MapControllers();
 
 app.Run();

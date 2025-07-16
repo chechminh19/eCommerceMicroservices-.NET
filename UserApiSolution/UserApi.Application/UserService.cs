@@ -1,5 +1,8 @@
 ﻿using eCommerceLibrary.Generic;
 using eCommerceLibrary.Response;
+using Google.Apis.Auth.OAuth2.Flows;
+using Google.Apis.Auth.OAuth2;
+using Google.Apis.Oauth2.v2;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using Org.BouncyCastle.Asn1.Ocsp;
@@ -15,6 +18,9 @@ using UserApi.Application.Enums;
 using UserApi.Application.Interfaces;
 using UserApi.Application.Utils;
 using UserApi.Domain.Entities;
+using Google.Apis.PeopleService.v1;
+using Google.Apis.Services;
+using Azure.Core;
 
 namespace UserApi.Application
 {
@@ -22,15 +28,11 @@ namespace UserApi.Application
     {
         private readonly IUserRepo _userRepo;
         private readonly IConfiguration _config;
-        private readonly ITransactionRepo _transactionRepo;
-        public UserService(IUserRepo userRepo, IConfiguration configuration, ITransactionRepo repo)
+        public UserService(IUserRepo userRepo, IConfiguration configuration)
         {
             _userRepo = userRepo;
             _config = configuration;
-            _transactionRepo = repo;
         }
-
-       
 
         public async Task<ResponsesService<int>> DeleteAsync(int id)
         {
@@ -149,6 +151,6 @@ namespace UserApi.Application
             {
                 return ResponsesService<LoginResponseDTO>.Fail("Login failed.", 500);
             }
-        }
+        }       
     }
 }
