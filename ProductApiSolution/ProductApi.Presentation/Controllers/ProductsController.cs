@@ -18,7 +18,7 @@ namespace ProductApi.Presentation.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll(string search = "", string sort = "", int page = 1, int pageSize= 5)
         {
             if (!ModelState.IsValid)
             {
@@ -30,8 +30,8 @@ namespace ProductApi.Presentation.Controllers
                 return BadRequest(new ApiResponse<object>(false, 400, "Invalid data", null, errors));
             }
 
-            var response = await _service.GetAllAsync();
-            return StatusCode(response.StatusCode, new ApiResponse<object>(response.Flag, response.StatusCode, response.Message, null));
+            var response = await _service.GetAllAsync(page, pageSize, search, sort);
+            return StatusCode(response.StatusCode, new ApiResponse<object>(response.Flag, response.StatusCode, response.Message, response.Data));
 
         }
 
@@ -49,7 +49,7 @@ namespace ProductApi.Presentation.Controllers
             }
 
             var response = await _service.GetByIdAsync(id);
-            return StatusCode(response.StatusCode, new ApiResponse<object>(response.Flag, response.StatusCode, response.Message, null));
+            return StatusCode(response.StatusCode, new ApiResponse<object>(response.Flag, response.StatusCode, response.Message, response.Data));
         }
 
         [HttpPost]

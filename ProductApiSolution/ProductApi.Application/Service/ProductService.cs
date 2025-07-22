@@ -1,4 +1,5 @@
 ﻿using eCommerceLibrary.Response;
+using eCommerceLibrary.Utils;
 using ProductApi.Application.DTOs.Conversions;
 using ProductApi.Application.DTOs;
 using ProductApi.Application.Interfaces;
@@ -7,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace ProductApi.Application.Service
 {
@@ -64,36 +66,48 @@ namespace ProductApi.Application.Service
             return  ResponsesService<int>.Success($"Product {id} deleted", 204);
         }
 
-        public async Task<ResponsesService<ProductDTO?>> GetByIdAsync(int id)
+        public async Task<ResponsesService<ProductDTOList?>> GetByIdAsync(int id)
         {
             try
             {
                 var product = await _productRepo.FindByIdAsync(id);
 
                 if (product == null)
-                    return ResponsesService<ProductDTO?>.Fail("Product not found", 404, null);
+                    return ResponsesService<ProductDTOList?>.Fail("Product not found", 404, null);
 
                 var productDto = ProductConversion.FromEntityNew(product);
-                return ResponsesService<ProductDTO?>.Success("Product not found", 200, productDto);
+                return ResponsesService<ProductDTOList?>.Success("Product here", 200, productDto);
             }
             catch (Exception)
             {
-                return ResponsesService<ProductDTO?>.Fail("Failed to retrieve product", 500, null);
+                return ResponsesService<ProductDTOList?>.Fail("Failed to retrieve product", 500, null);
             }
         }
 
-        public async Task<ResponsesService<IEnumerable<ProductDTO>>> GetAllAsync()
+        public async Task<ResponsesService<PaginationModel<IEnumerable<ProductDTOList>>>> GetAllAsync(int page, int pageSize, string search, string sort)
         {
             try
             {
                 var products = await _productRepo.GetAllAsync();
+                if(!string.IsNullOrEmpty(search))
+                {
+                    products = products.Where(p => p.NameProduct.Contains(search, StringComparison.OrdinalIgnoreCase));
+                }
+                products = sort.ToLower() switch
+                {  // Sort by price in ascending order when "price" is specified
+                    "price" => products.OrderBy(p => p.Price),
+                    // Sort by name, material, color as required
+                    "name" => products.OrderBy(p => p.NameProduct),                    
+                    // Default to sorting by Id in descending order (newest first) when no sort or other sort types
+                    _ => products.OrderByDescending(p => p.Id)
+                };
                 var productsDto = ProductConversion.FromEntities(products);
-
-                return ResponsesService<IEnumerable<ProductDTO>>.Success("Products retrieved successfully", 200, productsDto);
+                var paginationDtos = await Pagination.GetPagination(productsDto, page, pageSize);
+                return ResponsesService<PaginationModel<IEnumerable<ProductDTOList>>>.Success("Products retrieved successfully", 200, paginationDtos);
             }
             catch (Exception)
             {
-                return ResponsesService<IEnumerable<ProductDTO>>.Fail("Failed to retrieve products", 500, Enumerable.Empty<ProductDTO>());
+                return ResponsesService<PaginationModel<IEnumerable<ProductDTOList>>>.Fail("Failed to retrieve products", 500, null);
             }
         }       
     }

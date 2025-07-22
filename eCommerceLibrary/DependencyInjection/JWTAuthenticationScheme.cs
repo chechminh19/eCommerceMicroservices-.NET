@@ -37,13 +37,6 @@ namespace eCommerceLibrary.DependencyInjection
                         ValidAudience = audience,
                         IssuerSigningKey = new SymmetricSecurityKey(key)
                     };
-                })
-                .AddGoogle(options =>
-                {
-                    options.ClientId = configuration["Google:ClientId"]!;
-                    options.ClientSecret = configuration["Google:ClientSecret"]!;
-                    options.CorrelationCookie.SameSite = SameSiteMode.Lax;
-                    options.CorrelationCookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
                 });
             return services;
         }     

@@ -13,5 +13,14 @@ namespace ProductApi.Application.DTOs
         [Required] [MaxLength(20)] string Des,
         [Required, Range(1, int.MaxValue)] int Quantity,
         [Required, DataType(DataType.Currency)] decimal Price
+        );   
+    public record ProductDTOList
+    (
+        int id,
+        string Name,
+        string Des,
+        int Quantity,
+        decimal Price
         );
+
 }

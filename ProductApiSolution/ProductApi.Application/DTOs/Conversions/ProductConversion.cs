@@ -16,11 +16,11 @@ namespace ProductApi.Application.DTOs.Conversions
             Quantity = dto.Quantity,
             Price = dto.Price,
         };
-        public static ProductDTO FromEntityNew(Product product) =>
-           new(product.NameProduct!, product.DescriptionProduct!, product.Quantity, product.Price);
+        public static ProductDTOList FromEntityNew(Product product) =>
+           new(product.Id!,product.NameProduct!, product.DescriptionProduct!, product.Quantity, product.Price);
 
-        public static IEnumerable<ProductDTO> FromEntities(IEnumerable<Product> products) =>
-            products.Select(p => new ProductDTO(p.NameProduct!, p.DescriptionProduct!, p.Quantity, p.Price));
+        public static IEnumerable<ProductDTOList> FromEntities(IEnumerable<Product> products) =>
+            products.Select(p => new ProductDTOList(p.Id!,p.NameProduct!, p.DescriptionProduct!, p.Quantity, p.Price));
        
     }
 }

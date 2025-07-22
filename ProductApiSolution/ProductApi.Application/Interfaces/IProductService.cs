@@ -13,7 +13,7 @@ namespace ProductApi.Application.Interfaces
         Task<ResponsesService<object>> CreateAsync(ProductDTO dto);
         Task<ResponsesService<object>> UpdateAsync(ProductDTO dto, int id);
         Task<ResponsesService<int>> DeleteAsync(int id);
-        Task<ResponsesService<ProductDTO?>> GetByIdAsync(int id);
-        Task<ResponsesService<IEnumerable<ProductDTO>>> GetAllAsync();
+        Task<ResponsesService<ProductDTOList?>> GetByIdAsync(int id);
+        Task<ResponsesService<PaginationModel<IEnumerable<ProductDTOList>>>> GetAllAsync(int page, int pageSize, string search, string sort);
     }
 }
