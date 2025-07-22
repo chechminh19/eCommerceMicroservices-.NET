@@ -14,7 +14,13 @@ namespace OrderApi.Application.DTOs.Conversions
         {
             UserId = dto.UserId,
             Status = dto.Status,
-            PaymentDate = dto.Status == (byte)OrderEnums.Completed ? DateTime.UtcNow : null
+            PaymentDate = dto.Status == (byte)OrderEnums.Completed ? DateTime.Now : null,
+            OrderDetails = dto.OrderDetails.Select(od => new OrderDetail
+            {
+                ProductId = od.ProductId,
+                QuantityProduct = od.Quantity,
+                Price = od.Price
+            }).ToList()
         };
 
         public static Order ToEntityUpdate(OrderUpdateDTO dto, Order exist)

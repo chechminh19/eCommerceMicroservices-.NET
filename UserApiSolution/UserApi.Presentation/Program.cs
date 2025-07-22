@@ -59,6 +59,13 @@ builder.Services.AddAuthentication().AddGoogle(options =>
     options.CorrelationCookie.SameSite = SameSiteMode.Lax;
     options.CorrelationCookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
 });
+builder.Services.AddLogging(logging =>
+{
+    logging.ClearProviders();
+    logging.AddConsole(); // Ensure console logging is enabled
+    logging.AddDebug();   // For debugging in IDEs like Visual Studio
+    // Optionally, add other providers like Serilog
+});
 builder.Services.AddApplicationService();
 // Program.cs
 

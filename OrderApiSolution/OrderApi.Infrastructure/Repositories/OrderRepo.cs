@@ -1,6 +1,7 @@
 ﻿using eCommerceLibrary.Generic;
 using eCommerceLibrary.Logs;
 using Microsoft.EntityFrameworkCore;
+using OrderApi.Application.Enums;
 using OrderApi.Application.Interfaces;
 using OrderApi.Domain.Entities;
 using System;
@@ -101,6 +102,12 @@ namespace OrderApi.Infrastructure.Repositories
                 LogExceptions.LogException(ex);
                 throw;
             }
+        }
+
+        public async Task<Order?> FindCartByUserIdAsync(int userId)
+        {
+            return await _context.Orders
+            .FirstOrDefaultAsync(o => o.UserId == userId && o.Status == (byte)OrderEnums.Processing);
         }
     }
 }

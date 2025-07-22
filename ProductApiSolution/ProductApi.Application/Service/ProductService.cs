@@ -109,6 +109,6 @@ namespace ProductApi.Application.Service
             {
                 return ResponsesService<PaginationModel<IEnumerable<ProductDTOList>>>.Fail("Failed to retrieve products", 500, null);
             }
-        }       
+        } 
     }
 }

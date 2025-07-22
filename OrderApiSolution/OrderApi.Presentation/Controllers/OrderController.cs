@@ -50,24 +50,7 @@ namespace OrderApi.Presentation.Controllers
             var response = await _service.GetByIdAsync(id);
             return StatusCode(response.StatusCode, new ApiResponse<object>(response.Flag, response.StatusCode, response.Message, null));
         }
-
-        [HttpPost]
-        public async Task<IActionResult> Create([FromBody] OrderCreateDTO dto)
-        {
-            if (!ModelState.IsValid)
-            {
-                var errors = ModelState
-                        .Where(x => x.Value?.Errors.Count > 0)
-                        .ToDictionary(kvp => kvp.Key,
-                                      kvp => kvp.Value!.Errors.Select(e => e.ErrorMessage).ToArray());
-
-                return BadRequest(new ApiResponse<object>(false, 400, "Invalid data", null, errors));
-            }
-
-            var response = await _service.CreateAsync(dto);
-            return StatusCode(response.StatusCode, new ApiResponse<object>(response.Flag, response.StatusCode, response.Message, null));
-        }
-
+   
         [HttpPut("{id}")]
         public async Task<IActionResult> Update([FromBody] OrderUpdateDTO dto, int id)
         {

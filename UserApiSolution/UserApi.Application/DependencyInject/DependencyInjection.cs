@@ -20,6 +20,8 @@ namespace UserApi.Application.DependencyInject
         {
             // Register Service
             services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IKafkaProducerUserService, KafkaProducerUserService>();
+
             return services;
         }
     }

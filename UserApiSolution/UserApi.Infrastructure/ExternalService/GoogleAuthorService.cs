@@ -1,4 +1,5 @@
 ﻿using Azure.Core;
+using Confluent.Kafka;
 using eCommerceLibrary.Response;
 using Google.Apis.Auth;
 using Google.Apis.Auth.OAuth2;
@@ -6,6 +7,7 @@ using Google.Apis.Auth.OAuth2.Flows;
 using Google.Apis.Auth.OAuth2.Responses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.Identity.Client.Platforms.Features.DesktopOs.Kerberos;
 using System;
 using System.Collections.Generic;
@@ -26,12 +28,17 @@ namespace UserApi.Application
         private readonly IConfiguration _configuration;
         private string _redirectUrl;
         private readonly IGoogleAuthHelper _authHelper;
-        public GoogleAuthorService(UserContext context, IConfiguration configuration, IGoogleAuthHelper googleAuthHelper) 
+        private readonly IKafkaProducerUserService _kafka;
+        private readonly ILogger<GoogleAuthorService> _logger;
+        public GoogleAuthorService(UserContext context, IConfiguration configuration, IGoogleAuthHelper googleAuthHelper, 
+            IKafkaProducerUserService kafka, ILogger<GoogleAuthorService> logger) 
         {
             _context = context; 
             _configuration = configuration;
             _redirectUrl = configuration["Google:RedirectUri"];
             _authHelper = googleAuthHelper;
+            _kafka = kafka;
+            _logger = logger;
         }
 
         public async Task<ResponsesService<LoginResponseGoogleDTO>> ExchangeCodeForToken(string code)
@@ -71,13 +78,25 @@ namespace UserApi.Application
                         GoogleId = payload.Subject,
                         Email = payload.Email,
                         FullName = payload.Name,
-                        CreatedAt = DateTime.UtcNow,
+                        CreatedAt = DateTime.Now,
                         IsEmailVerified = false
                     };
                     await _context.AddAsync(user);
                 }
-
-                user.LastLogin = DateTime.UtcNow;             
+                else
+                {
+                    user.LastLogin = DateTime.Now;
+                }
+                await _context.SaveChangesAsync();
+                //await _kafka.PublishUserCreatedEvent(user.Id);
+                try
+                {
+                    await _kafka.PublishUserCreatedEvent(user.Id);
+                }
+                catch (ProduceException<Null, string> ex)
+                {
+                    _logger.LogWarning(ex, "Failed to publish user-created event to Kafka for user ID: {UserId}", user.Id);
+                }
                 var jwt = user.GenerateJsonWebToken(_configuration["Authentication:Issuer"]!,_configuration["Authentication:Audience"]!,_configuration["Authentication:Key"]!,DateTime.UtcNow);
 
                 var response = new LoginResponseGoogleDTO
@@ -88,11 +107,12 @@ namespace UserApi.Application
                     //GoogleAccessToken = tokenResponse.AccessToken,
                     //GoogleIdToken = tokenResponse.IdToken,                  
                 };
-                await _context.SaveChangesAsync();
+                _logger.LogInformation("Google login successful for user ID: {UserId}", user.Id);
                 return ResponsesService<LoginResponseGoogleDTO>.Success("Google login successful.", 200, response);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Google login failed for code: {Code}", code);
                 return ResponsesService<LoginResponseGoogleDTO>.Fail("Google login failed.", 500);
             }
         }

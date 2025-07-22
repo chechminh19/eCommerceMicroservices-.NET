@@ -28,10 +28,12 @@ namespace UserApi.Application
     {
         private readonly IUserRepo _userRepo;
         private readonly IConfiguration _config;
-        public UserService(IUserRepo userRepo, IConfiguration configuration)
+        private readonly IKafkaProducerUserService _kafka;
+        public UserService(IUserRepo userRepo, IConfiguration configuration, IKafkaProducerUserService kafka)
         {
             _userRepo = userRepo;
             _config = configuration;
+            _kafka = kafka;
         }
 
         public async Task<ResponsesService<int>> DeleteAsync(int id)
@@ -118,6 +120,7 @@ namespace UserApi.Application
 
                 var user = UserConversions.ToEntityRegister(dto);
                 await _userRepo.CreateAsync(user);
+                await _kafka.PublishUserCreatedEvent(user.Id);
 
                 if (!await Utils.EmailUtils.SendConfirmationEmail(user.Email, user.EmailConfirmationToken, _config))
                 {

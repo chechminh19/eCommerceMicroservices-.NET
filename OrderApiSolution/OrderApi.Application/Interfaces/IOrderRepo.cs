@@ -18,6 +18,6 @@ namespace OrderApi.Application.Interfaces
         public Task<Order?> FindByIdAsync(int id);
         public Task<Order?> GetByAsync(Expression<Func<Order, bool>> predicate);
         public Task<Order> UpdateAsync(Order entity);
-
+        Task<Order?> FindCartByUserIdAsync(int userId);
     }
 }

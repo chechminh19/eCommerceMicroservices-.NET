@@ -1,8 +1,10 @@
 ﻿using eCommerceLibrary.Response;
+using Microsoft.EntityFrameworkCore;
 using OrderApi.Application.DTOs;
 using OrderApi.Application.DTOs.Conversions;
 using OrderApi.Application.Enums;
 using OrderApi.Application.Interfaces;
+using OrderApi.Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,21 +19,6 @@ namespace OrderApi.Application.Services
         public OrderService(IOrderRepo orderRepo)
         {
             _orderRepo = orderRepo;
-        }
-
-        public async Task<ResponsesService<object>> CreateAsync(OrderCreateDTO dto)
-        {
-            try
-            {              
-                var entity = OrderConversions.ToEntity(dto);
-                var createdOrder = await _orderRepo.CreateAsync(entity);
-
-                return  ResponsesService<object>.Success($"Order {createdOrder.Id} created successfully", 201);
-            }
-            catch (Exception)
-            {
-                return ResponsesService<object>.Fail($"Error creating order", 500);
-            }
         }
 
         public async Task<ResponsesService<object>> DeleteAsync(int id)
@@ -88,6 +75,25 @@ namespace OrderApi.Application.Services
             {
                 return ResponsesService<OrderDTO?>.Fail("Failed to retrieve order", 500, null);
             }
+        }
+
+        public async Task HandleUserCreatedAsync(UserCreatedEvent evt)
+        {
+            if (await _orderRepo.FindCartByUserIdAsync(evt.UserId) != null)
+            {
+                Console.WriteLine($"User {evt.UserId} already have cart!");
+                return;
+            }
+
+            var order = new Order
+            {
+                UserId = evt.UserId,
+                Status = (byte)OrderEnums.Processing,
+                OrderDetails = new List<OrderDetail>()
+            };
+
+            await _orderRepo.CreateAsync(order);
+            Console.WriteLine($"Order created for UserId {evt.UserId}");
         }
 
         public async Task<ResponsesService<object>> UpdateAsync(OrderUpdateDTO dto, int id)
