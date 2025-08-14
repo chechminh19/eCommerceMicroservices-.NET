@@ -33,4 +33,20 @@ namespace OrderApi.Application.DTOs
         int? CodePay,
         DateTime? PaymentDate
     );
+    public record OrderDetailDTO(
+    int Id,
+    int ProductId,
+    int Quantity,
+    decimal Price,
+    decimal TotalPrice
+    );
+    public record OrderWithDetailsDTO(
+        int Id,
+        int UserId,
+        byte Status,
+        int? CodePay,
+        DateTime? PaymentDate,
+        List<OrderDetailDTO> OrderDetails,
+        decimal TotalAmount
+    );
 }

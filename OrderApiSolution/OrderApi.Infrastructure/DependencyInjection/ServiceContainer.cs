@@ -7,7 +7,7 @@ using OrderApi.Infrastructure;
 using OrderApi.Infrastructure.Repositories;
 
 
-namespace ProductApi.Infrastructure.DependencyInjection
+namespace OrderApi.Infrastructure.DependencyInjection
 {
     public static class ServiceContainer
     {

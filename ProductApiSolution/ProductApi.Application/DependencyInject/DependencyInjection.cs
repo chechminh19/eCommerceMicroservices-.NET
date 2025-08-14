@@ -16,6 +16,7 @@ namespace ProductApi.Application.DependencyInject
         {
             // Register Service
             services.AddScoped<IProductService, ProductService>();
+            services.AddGrpc();
 
             return services;
         }

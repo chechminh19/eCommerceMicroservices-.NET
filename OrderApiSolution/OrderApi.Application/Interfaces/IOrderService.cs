@@ -10,7 +10,8 @@ namespace OrderApi.Application.Interfaces
         //Task<ResponsesService<object>> CreateAsync(OrderCreateDTO dto);
         Task<ResponsesService<object>> UpdateAsync(OrderUpdateDTO dto, int id);
         Task<ResponsesService<object>> DeleteAsync(int id);
-        Task<ResponsesService<OrderDTO?>> GetByIdAsync(int id);
+        Task<ResponsesService<OrderWithDetailsDTO?>> GetByIdAsync(int id);
         Task<ResponsesService<IEnumerable<OrderDTO>>> GetAllAsync();
+        Task<ResponsesService<object>> AddProductToOrder(int orderId, int productId, int quantity);
     }
 }

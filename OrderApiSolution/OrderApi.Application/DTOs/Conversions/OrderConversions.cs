@@ -43,5 +43,23 @@ namespace OrderApi.Application.DTOs.Conversions
 
         public static IEnumerable<OrderDTO> ToDTOs(IEnumerable<Order> orders)
             => orders.Select(o => ToDTO(o));
+
+        public static OrderDetailDTO ToDetailDTO(OrderDetail entity) => new(
+            entity.Id,
+            entity.ProductId,
+            entity.QuantityProduct,
+            entity.Price,
+            entity.Price * entity.QuantityProduct
+        );
+
+        public static OrderWithDetailsDTO ToDetailDTO(Order entity) => new(
+            entity.Id,
+            entity.UserId,
+            entity.Status,
+            entity.CodePay, 
+            entity.PaymentDate,
+            entity.OrderDetails?.Select(od => ToDetailDTO(od)).ToList() ?? new List<OrderDetailDTO>(),
+            entity.OrderDetails?.Sum(od => od.Price * od.QuantityProduct) ?? 0
+        );
     }
 }

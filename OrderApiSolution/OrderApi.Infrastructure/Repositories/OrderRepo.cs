@@ -67,7 +67,8 @@ namespace OrderApi.Infrastructure.Repositories
         {
             try
             {
-                return await _context.Orders.FindAsync(id);
+                return await _context.Orders.Include(o => o.OrderDetails)
+                                        .FirstOrDefaultAsync(o => o.Id == id);
             }
             catch (Exception ex)
             {

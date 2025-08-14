@@ -21,6 +21,7 @@ using UserApi.Domain.Entities;
 using Google.Apis.PeopleService.v1;
 using Google.Apis.Services;
 using Azure.Core;
+using Microsoft.Extensions.Logging;
 
 namespace UserApi.Application
 {
@@ -29,11 +30,13 @@ namespace UserApi.Application
         private readonly IUserRepo _userRepo;
         private readonly IConfiguration _config;
         private readonly IKafkaProducerUserService _kafka;
-        public UserService(IUserRepo userRepo, IConfiguration configuration, IKafkaProducerUserService kafka)
+        private readonly ILogger<UserService> _logger;
+        public UserService(IUserRepo userRepo, IConfiguration configuration, IKafkaProducerUserService kafka, ILogger<UserService> logger)
         {
             _userRepo = userRepo;
             _config = configuration;
             _kafka = kafka;
+            _logger = logger;
         }
 
         public async Task<ResponsesService<int>> DeleteAsync(int id)
@@ -112,7 +115,6 @@ namespace UserApi.Application
 
         public async Task<ResponsesService<object>> RegisterWithoutGoogle(UserRegisterDTO dto)
         {   
-
             try
             {       
                 if (await _userRepo.GetByAsync(u => u.Email == dto.Email) != null)
@@ -120,13 +122,19 @@ namespace UserApi.Application
 
                 var user = UserConversions.ToEntityRegister(dto);
                 await _userRepo.CreateAsync(user);
-                await _kafka.PublishUserCreatedEvent(user.Id);
-
+                
                 if (!await Utils.EmailUtils.SendConfirmationEmail(user.Email, user.EmailConfirmationToken, _config))
                 {
                     return ResponsesService<object>.Fail("Failed to send confirmation email.", 500);
                 }
-                                 
+                try
+                {
+                    await _kafka.PublishUserCreatedEvent(user.Id);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Kafka publish failed for user {UserId}", user.Id);
+                }
                 return ResponsesService<object>.Success("User created successfully.", 201);
             }
             catch (Exception)

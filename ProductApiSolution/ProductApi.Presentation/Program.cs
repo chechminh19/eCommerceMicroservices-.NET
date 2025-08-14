@@ -1,5 +1,7 @@
 using ProductApi.Infrastructure.DependencyInjection;
 using ProductApi.Application.DependencyInject;
+using ProductGrpc;
+using ProductApi.Application.Service;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers()
@@ -25,5 +27,6 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
-
+app.MapGrpcService<ProductGrpcServiceImpl>(); // map gRPC
+app.MapGet("/", () => "Product gRPC Service running");
 app.Run();

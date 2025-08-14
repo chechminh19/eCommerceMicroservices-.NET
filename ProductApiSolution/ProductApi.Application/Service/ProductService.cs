@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using ProductGrpc;
 
 namespace ProductApi.Application.Service
 {
@@ -109,6 +110,7 @@ namespace ProductApi.Application.Service
             {
                 return ResponsesService<PaginationModel<IEnumerable<ProductDTOList>>>.Fail("Failed to retrieve products", 500, null);
             }
-        } 
+        }
+        
     }
 }

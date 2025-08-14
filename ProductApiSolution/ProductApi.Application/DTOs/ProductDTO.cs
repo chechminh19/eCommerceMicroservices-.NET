@@ -16,7 +16,7 @@ namespace ProductApi.Application.DTOs
         );   
     public record ProductDTOList
     (
-        int id,
+        int Id,
         string Name,
         string Des,
         int Quantity,

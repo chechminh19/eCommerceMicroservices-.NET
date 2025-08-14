@@ -31,7 +31,7 @@ namespace OrderApi.Presentation.Controllers
             }
 
             var response = await _service.GetAllAsync();
-            return StatusCode(response.StatusCode, new ApiResponse<object>(response.Flag, response.StatusCode, response.Message, null));
+            return StatusCode(response.StatusCode, new ApiResponse<object>(response.Flag, response.StatusCode, response.Message, response.Data));
         }
 
         [HttpGet("{id}")]
@@ -48,9 +48,9 @@ namespace OrderApi.Presentation.Controllers
             }
 
             var response = await _service.GetByIdAsync(id);
-            return StatusCode(response.StatusCode, new ApiResponse<object>(response.Flag, response.StatusCode, response.Message, null));
+            return StatusCode(response.StatusCode, new ApiResponse<object>(response.Flag, response.StatusCode, response.Message, response.Data));
         }
-   
+
         [HttpPut("{id}")]
         public async Task<IActionResult> Update([FromBody] OrderUpdateDTO dto, int id)
         {
@@ -83,7 +83,29 @@ namespace OrderApi.Presentation.Controllers
 
             var response = await _service.DeleteAsync(id);
             return StatusCode(response.StatusCode, new ApiResponse<object>(response.Flag, response.StatusCode, response.Message, null));
-        }   
+        }
+        [HttpPost("{orderId}")]
+        public async Task<IActionResult> AddProductToOrder(int orderId, [FromBody] AddProductToOrderRequest request)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState
+                    .Where(x => x.Value?.Errors.Count > 0)
+                    .ToDictionary(
+                        kvp => kvp.Key,
+                        kvp => kvp.Value!.Errors.Select(e => e.ErrorMessage).ToArray());
 
+                return BadRequest(new ApiResponse<object>(false,400,"Invalid data",null,errors));
+            }
+
+            var response = await _service.AddProductToOrder(orderId, request.ProductId, request.Quantity);
+            return StatusCode(response.StatusCode, new ApiResponse<object>(response.Flag,response.StatusCode,response.Message,null));
+        }
+       
+    }
+    public class AddProductToOrderRequest
+    {
+        public int ProductId { get; set; }
+        public int Quantity { get; set; }
     }
 }
